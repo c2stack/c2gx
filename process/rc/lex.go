@@ -5,12 +5,13 @@ import (
 	"strings"
 	"unicode/utf8"
 	"fmt"
+	"github.com/c2gx/process"
 )
 
 // This uses the go feature call go tools in the build process. To ensure this gets
 //  called before compilation, make this call before building
 //
-//    go generate c2gx/rc
+//    go generate c2gx/process/rc
 //
 //go:generate go tool yacc -o parser.go syntax.y
 type Token struct {
@@ -56,7 +57,7 @@ type lexer struct {
 	start     int
 	width     int
 	state     stateFunc
-	tree      tree
+	tree      process.Op
 	input     string
 	tokens    []Token
 	head      int

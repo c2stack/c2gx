@@ -1,8 +1,10 @@
 %{
 package rc
 
+import "github.com/c2gx/process"
+
 func (l *lexer) Lex(lval *yySymType) int {
-	yyDebug = 0 // 4 is most
+	yyDebug = 0 // 0 is off, 4 is most
 	t, _ := l.nextToken()
     if t.typ == ParseEof {
         return 0
@@ -14,9 +16,9 @@ func (l *lexer) Lex(lval *yySymType) int {
 %}
 
 %union {
-	ident  string
-	tree   tree
-	word    word
+	ident   string
+	op 		process.Op
+	word	process.Ident
 }
 
 %token token_eol
@@ -30,17 +32,17 @@ func (l *lexer) Lex(lval *yySymType) int {
 %token token_caret
 %token token_bang
 %token <ident> token_word
-%token <tree> kywd_for
-%token <tree> kywd_in
-%token <tree> kywd_while
-%token <tree> kywd_if
-%token <tree> kywd_not
-%token <tree> kywd_twiddle
-%token <tree> kywd_subshell
-%token <tree> kywd_switch
-%token <tree> kywd_fn
+%token <op> kywd_for
+%token <op> kywd_in
+%token <op> kywd_while
+%token <op> kywd_if
+%token <op> kywd_not
+%token <op> kywd_twiddle
+%token <op> kywd_subshell
+%token <op> kywd_switch
+%token <op> kywd_fn
 
-%type <tree> cmd cmdsa line for brace fn body cmdsan assign
+%type <op> cmd cmdsa line for brace fn body cmdsan assign
 %type <word> comword word words first
 
 %%
@@ -58,12 +60,12 @@ rc :
 line :
 	cmd
 	| cmdsa line {
-		$$ = addCodeBlock($1, $2)
+		$$ = process.AddCode($1, $2)
 		yylex.(*lexer).tree = $$
 	}
 
 assign : first token_eq word {
- 	$$ = &assignOper{lhs: $1, rhs: $3}
+ 	$$ = &process.AssignOp{Lhs: $1, Rhs: $3}
 	yylex.(*lexer).tree = $$
 }
 
@@ -74,13 +76,13 @@ first :
 cmd :
 	for
 	| fn
-	| kywd_while { $$ = &whileOper{} }
-	| kywd_if { $$ = &ifOper{} }
-	| kywd_not { $$ = &ifOper{not:true} }
-	| kywd_twiddle { $$ = &twiddleOper{} }
-	| token_bang { $$ = &bangOper{} }
-	| kywd_subshell { $$ = &subshellOper{} }
-	| kywd_switch { $$ = &switchOper{} }
+	| kywd_while { $$ = &process.WhileOp{} }
+	| kywd_if { $$ = &process.IfOp{} }
+	| kywd_not { $$ = &process.IfOp{Inverse:true} }
+	| kywd_twiddle { $$ = &process.TwiddleOp{} }
+	| token_bang { $$ = &process.BangOp{} }
+	| kywd_subshell { $$ = &process.SubShellOp{} }
+	| kywd_switch { $$ = &process.SwitchOp{} }
 	| assign
 
 brace :
@@ -90,15 +92,15 @@ brace :
 
 body :
 	cmd
-	| cmdsan body { $$ = addCodeBlock($1, $2) }
+	| cmdsan body { $$ = process.AddCode($1, $2) }
 
 fn :
 	kywd_fn words brace {
-		$$ = &fnOper{name: $2}
+		$$ = &process.FuncOp{Name: $2}
 		yylex.(*lexer).tree = $$
 	}
 	| kywd_fn words {
-		$$ = &fnOper{name: $2}
+		$$ = &process.FuncOp{Name: $2}
 		yylex.(*lexer).tree = $$
 	}
 
@@ -106,27 +108,27 @@ word :
 	comword
 
 comword :
-	token_word { $$ = ident($1) }
+	token_word { $$ = process.Word($1) }
 
 for:
 	kywd_for token_open_paren word token_closed_paren cmd {
-		$$ = &forOper{iter:$3, code: $5}
+		$$ = &process.ForOp{Iter:$3, Code: $5}
 		yylex.(*lexer).tree = $$
 	}
 	| kywd_for token_open_paren word kywd_in words token_closed_paren cmd {
-		$$ = &forOper{iter: $3, in: $5, code: $7}
+		$$ = &process.ForOp{Iter: $3, In: $5, Code: $7}
 		yylex.(*lexer).tree = $$
 	}
 
 words :
 	word
 	| words word {
-		$$ = addWord($1, $2)
+		$$ = process.AddIdent($1, $2)
 	}
 
 cmdsa :
 	cmd token_semi
-	| cmd token_amp { $$ = parallel($1) }
+	| cmd token_amp { $$ = process.ForkCode($1) }
 
 cmdsan :
 	cmdsa

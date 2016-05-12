@@ -4,8 +4,10 @@ package rc
 import __yyfmt__ "fmt"
 
 //line syntax.y:2
+import "github.com/c2gx/process"
+
 func (l *lexer) Lex(lval *yySymType) int {
-	yyDebug = 0 // 4 is most
+	yyDebug = 0 // 0 is off, 4 is most
 	t, _ := l.nextToken()
 	if t.typ == ParseEof {
 		return 0
@@ -14,12 +16,12 @@ func (l *lexer) Lex(lval *yySymType) int {
 	return int(t.typ)
 }
 
-//line syntax.y:16
+//line syntax.y:18
 type yySymType struct {
 	yys   int
 	ident string
-	tree  tree
-	word  word
+	op    process.Op
+	word  process.Ident
 }
 
 const token_eol = 57346
@@ -74,7 +76,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line syntax.y:135
+//line syntax.y:137
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -497,129 +499,129 @@ yydefault:
 
 	case 1:
 		yyDollar = yyS[yypt-0 : yypt+1]
-		//line syntax.y:53
+		//line syntax.y:55
 		{
 			return 1
 		}
 	case 2:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:54
+		//line syntax.y:56
 		{
-			yylex.(*lexer).tree = yyDollar[1].tree
+			yylex.(*lexer).tree = yyDollar[1].op
 		}
 	case 4:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:60
+		//line syntax.y:62
 		{
-			yyVAL.tree = addCodeBlock(yyDollar[1].tree, yyDollar[2].tree)
-			yylex.(*lexer).tree = yyVAL.tree
+			yyVAL.op = process.AddCode(yyDollar[1].op, yyDollar[2].op)
+			yylex.(*lexer).tree = yyVAL.op
 		}
 	case 5:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line syntax.y:65
+		//line syntax.y:67
 		{
-			yyVAL.tree = &assignOper{lhs: yyDollar[1].word, rhs: yyDollar[3].word}
-			yylex.(*lexer).tree = yyVAL.tree
+			yyVAL.op = &process.AssignOp{Lhs: yyDollar[1].word, Rhs: yyDollar[3].word}
+			yylex.(*lexer).tree = yyVAL.op
 		}
 	case 10:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:77
+		//line syntax.y:79
 		{
-			yyVAL.tree = &whileOper{}
+			yyVAL.op = &process.WhileOp{}
 		}
 	case 11:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:78
+		//line syntax.y:80
 		{
-			yyVAL.tree = &ifOper{}
+			yyVAL.op = &process.IfOp{}
 		}
 	case 12:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:79
+		//line syntax.y:81
 		{
-			yyVAL.tree = &ifOper{not: true}
+			yyVAL.op = &process.IfOp{Inverse: true}
 		}
 	case 13:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:80
+		//line syntax.y:82
 		{
-			yyVAL.tree = &twiddleOper{}
+			yyVAL.op = &process.TwiddleOp{}
 		}
 	case 14:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:81
+		//line syntax.y:83
 		{
-			yyVAL.tree = &bangOper{}
+			yyVAL.op = &process.BangOp{}
 		}
 	case 15:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:82
+		//line syntax.y:84
 		{
-			yyVAL.tree = &subshellOper{}
+			yyVAL.op = &process.SubShellOp{}
 		}
 	case 16:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:83
+		//line syntax.y:85
 		{
-			yyVAL.tree = &switchOper{}
+			yyVAL.op = &process.SwitchOp{}
 		}
 	case 18:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line syntax.y:87
+		//line syntax.y:89
 		{
-			yyVAL.tree = yyDollar[2].tree
+			yyVAL.op = yyDollar[2].op
 		}
 	case 20:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:93
+		//line syntax.y:95
 		{
-			yyVAL.tree = addCodeBlock(yyDollar[1].tree, yyDollar[2].tree)
+			yyVAL.op = process.AddCode(yyDollar[1].op, yyDollar[2].op)
 		}
 	case 21:
 		yyDollar = yyS[yypt-3 : yypt+1]
-		//line syntax.y:96
+		//line syntax.y:98
 		{
-			yyVAL.tree = &fnOper{name: yyDollar[2].word}
-			yylex.(*lexer).tree = yyVAL.tree
+			yyVAL.op = &process.FuncOp{Name: yyDollar[2].word}
+			yylex.(*lexer).tree = yyVAL.op
 		}
 	case 22:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:100
+		//line syntax.y:102
 		{
-			yyVAL.tree = &fnOper{name: yyDollar[2].word}
-			yylex.(*lexer).tree = yyVAL.tree
+			yyVAL.op = &process.FuncOp{Name: yyDollar[2].word}
+			yylex.(*lexer).tree = yyVAL.op
 		}
 	case 24:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:109
+		//line syntax.y:111
 		{
-			yyVAL.word = ident(yyDollar[1].ident)
+			yyVAL.word = process.Word(yyDollar[1].ident)
 		}
 	case 25:
 		yyDollar = yyS[yypt-5 : yypt+1]
-		//line syntax.y:112
+		//line syntax.y:114
 		{
-			yyVAL.tree = &forOper{iter: yyDollar[3].word, code: yyDollar[5].tree}
-			yylex.(*lexer).tree = yyVAL.tree
+			yyVAL.op = &process.ForOp{Iter: yyDollar[3].word, Code: yyDollar[5].op}
+			yylex.(*lexer).tree = yyVAL.op
 		}
 	case 26:
 		yyDollar = yyS[yypt-7 : yypt+1]
-		//line syntax.y:116
+		//line syntax.y:118
 		{
-			yyVAL.tree = &forOper{iter: yyDollar[3].word, in: yyDollar[5].word, code: yyDollar[7].tree}
-			yylex.(*lexer).tree = yyVAL.tree
+			yyVAL.op = &process.ForOp{Iter: yyDollar[3].word, In: yyDollar[5].word, Code: yyDollar[7].op}
+			yylex.(*lexer).tree = yyVAL.op
 		}
 	case 28:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:123
+		//line syntax.y:125
 		{
-			yyVAL.word = addWord(yyDollar[1].word, yyDollar[2].word)
+			yyVAL.word = process.AddIdent(yyDollar[1].word, yyDollar[2].word)
 		}
 	case 30:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:129
+		//line syntax.y:131
 		{
-			yyVAL.tree = parallel(yyDollar[1].tree)
+			yyVAL.op = process.ForkCode(yyDollar[1].op)
 		}
 	}
 	goto yystack /* stack new state and value */
