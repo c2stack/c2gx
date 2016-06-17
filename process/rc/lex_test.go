@@ -20,36 +20,46 @@ func TestRcLex(t *testing.T) {
 			"one word",
 			"switch",
 			[]int{
-				kywd_switch,
+				token_switch,
+			},
+		},
+		{
+			"quote",
+			"'hello world'",
+			[]int{
+				token_string,
 			},
 		},
 		{
 			"whitespace",
 			"  switch  ",
 			[]int{
-				kywd_switch,
+				token_switch,
 			},
 		},
 		{
 			"multi-line",
 			"switch\nswitch",
 			[]int{
-				kywd_switch, token_eol, kywd_switch,
+				token_switch, token_eol, token_switch,
 			},
 		},
 		{
 			"commands",
 			"for ( x )",
 			[]int{
-				kywd_for, token_open_paren, token_word, token_closed_paren,
+				token_for, token_open_paren, token_ident, token_closed_paren,
+			},
+		},
+		{
+			"fn",
+			"fn x { }",
+			[]int{
+				token_fn, token_ident, token_open_brace, token_closed_brace,
 			},
 		},
 	}
-	only := ""//commands"
 	for _, test := range tests {
-		if len(only) > 0 && test.label != only {
-			continue
-		}
 		label := fmt.Sprintf("%s - '%s'", test.label, test.script)
 		l := lex(test.script)
 		for j, tok := range test.expected {

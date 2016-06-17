@@ -1,27 +1,36 @@
-//line syntax.y:2
+//line rc.y:2
 package rc
 
 import __yyfmt__ "fmt"
 
-//line syntax.y:2
+//line rc.y:2
 import "github.com/c2gx/process"
 
+// Parser for Rc
+//  https://en.wikipedia.org/wiki/Rc
+
 func (l *lexer) Lex(lval *yySymType) int {
-	yyDebug = 0 // 0 is off, 4 is most
 	t, _ := l.nextToken()
 	if t.typ == ParseEof {
 		return 0
 	}
-	lval.ident = t.val
+	lval.token = t.val
+	lval.stack = l.stack
 	return int(t.typ)
 }
 
-//line syntax.y:18
+func tokenString(s string) string {
+	return s[1 : len(s)-1]
+}
+
+//line rc.y:25
 type yySymType struct {
-	yys   int
-	ident string
-	op    process.Op
-	word  process.Ident
+	yys    int
+	token  string
+	value  *process.Value
+	values []*process.Value
+	fcall  *process.FuncCallOp
+	stack  *opStack
 }
 
 const token_eol = 57346
@@ -34,16 +43,19 @@ const token_amp = 57352
 const token_eq = 57353
 const token_caret = 57354
 const token_bang = 57355
-const token_word = 57356
-const kywd_for = 57357
-const kywd_in = 57358
-const kywd_while = 57359
-const kywd_if = 57360
-const kywd_not = 57361
-const kywd_twiddle = 57362
-const kywd_subshell = 57363
-const kywd_switch = 57364
-const kywd_fn = 57365
+const token_ident = 57356
+const token_string = 57357
+const token_number = 57358
+const token_for = 57359
+const token_in = 57360
+const token_while = 57361
+const token_if = 57362
+const token_not = 57363
+const token_twiddle = 57364
+const token_subshell = 57365
+const token_switch = 57366
+const token_fn = 57367
+const token_backtick = 57368
 
 var yyToknames = [...]string{
 	"$end",
@@ -59,16 +71,19 @@ var yyToknames = [...]string{
 	"token_eq",
 	"token_caret",
 	"token_bang",
-	"token_word",
-	"kywd_for",
-	"kywd_in",
-	"kywd_while",
-	"kywd_if",
-	"kywd_not",
-	"kywd_twiddle",
-	"kywd_subshell",
-	"kywd_switch",
-	"kywd_fn",
+	"token_ident",
+	"token_string",
+	"token_number",
+	"token_for",
+	"token_in",
+	"token_while",
+	"token_if",
+	"token_not",
+	"token_twiddle",
+	"token_subshell",
+	"token_switch",
+	"token_fn",
+	"token_backtick",
 }
 var yyStatenames = [...]string{}
 
@@ -76,7 +91,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line syntax.y:137
+//line rc.y:171
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -85,66 +100,70 @@ var yyExca = [...]int{
 	-2, 0,
 }
 
-const yyNprod = 33
+const yyNprod = 38
 const yyPrivate = 57344
 
 var yyTokenNames []string
 var yyStates []string
 
-const yyLast = 61
+const yyLast = 72
 
 var yyAct = [...]int{
 
-	27, 18, 3, 26, 4, 18, 25, 19, 38, 11,
-	19, 15, 36, 7, 8, 9, 10, 12, 13, 16,
-	47, 37, 28, 29, 33, 45, 21, 19, 30, 32,
-	19, 22, 34, 35, 18, 21, 39, 18, 41, 42,
-	22, 18, 44, 39, 43, 41, 24, 32, 18, 46,
-	48, 2, 20, 1, 17, 14, 23, 40, 6, 31,
-	5,
+	35, 34, 3, 44, 7, 59, 16, 51, 25, 43,
+	15, 40, 36, 37, 38, 11, 19, 53, 28, 17,
+	55, 8, 9, 10, 39, 12, 13, 20, 54, 46,
+	36, 37, 38, 47, 45, 49, 32, 42, 22, 36,
+	37, 38, 39, 23, 50, 26, 41, 22, 52, 45,
+	56, 39, 23, 31, 29, 2, 58, 27, 4, 49,
+	24, 57, 4, 48, 21, 30, 18, 6, 5, 14,
+	1, 33,
 }
 var yyPact = [...]int{
 
-	-4, -1000, 48, 30, -4, -1000, -1000, -1000, -1000, -1000,
-	-1000, -1000, -1000, -1000, -1000, 40, -7, 11, -1000, -1000,
-	-1000, -1000, -1000, -1000, -7, 16, -1000, -1000, -7, -7,
-	5, -1000, -1000, -4, -1000, -1000, -4, -7, 33, 21,
-	-4, -1000, -1000, 13, -1000, -1000, -1000, -4, -1000,
+	2, -1000, 60, 42, 2, 2, -1000, -1000, -1000, -1000,
+	-1000, -1000, -1000, -1000, -1000, 2, -1000, 48, 45, 25,
+	-3, -1000, -1000, -1000, -1000, -1000, 37, -1000, 33, -5,
+	-1000, 2, 16, 59, 16, -1000, -1000, -1000, -1000, -7,
+	40, -1000, -1000, 10, 11, 33, 2, -1000, -1000, -1000,
+	-1000, 16, 57, -1000, 16, -1000, -1000, -1000, -2, -1000,
 }
 var yyPgo = [...]int{
 
-	0, 2, 4, 51, 60, 59, 58, 8, 57, 55,
-	0, 3, 6, 54, 53,
+	0, 0, 1, 71, 4, 70, 55, 2, 57, 3,
+	29, 69, 68, 67, 66, 65,
 }
 var yyR1 = [...]int{
 
-	0, 14, 14, 3, 3, 9, 13, 13, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 5, 7,
-	7, 6, 6, 11, 10, 4, 4, 12, 12, 2,
-	2, 8, 8,
+	0, 5, 5, 6, 6, 9, 9, 8, 8, 10,
+	10, 11, 3, 3, 2, 2, 1, 1, 1, 1,
+	7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+	7, 7, 4, 14, 15, 13, 12, 12,
 }
 var yyR2 = [...]int{
 
-	0, 0, 2, 1, 2, 3, 1, 3, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 3, 1,
-	2, 3, 2, 1, 1, 5, 7, 1, 2, 2,
-	2, 1, 2,
+	0, 0, 2, 1, 2, 1, 2, 2, 2, 1,
+	2, 3, 0, 1, 1, 2, 1, 1, 1, 2,
+	2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	3, 1, 3, 4, 3, 2, 4, 6,
 }
 var yyChk = [...]int{
 
-	-1000, -14, -3, -1, -2, -4, -6, 17, 18, 19,
-	20, 13, 21, 22, -9, 15, 23, -13, -10, 14,
-	4, 5, 10, -3, 6, -12, -11, -10, 11, 12,
-	-11, -5, -11, 8, -11, -11, 7, 16, -7, -1,
-	-8, -2, -1, -12, 9, 4, -7, 7, -1,
+	-1000, -5, -6, -7, -8, -12, -13, -4, 19, 20,
+	21, 13, 23, 24, -11, 8, 4, 17, -14, 14,
+	25, 4, 5, 10, -6, -7, -10, -8, -7, 6,
+	-15, 8, 11, -3, -2, -1, 14, 15, 16, 26,
+	14, 9, 4, 14, -9, -7, -10, -1, 4, -1,
+	-4, 14, 8, 7, 18, 9, -9, 4, -2, 7,
 }
 var yyDef = [...]int{
 
-	1, -2, 0, 3, 0, 8, 9, 10, 11, 12,
-	13, 14, 15, 16, 17, 0, 0, 0, 6, 24,
-	2, 29, 30, 4, 0, 22, 27, 23, 0, 0,
-	0, 21, 28, 0, 5, 7, 0, 0, 0, 19,
-	0, 31, 25, 0, 18, 32, 20, 0, 26,
+	1, -2, 0, 3, 0, 0, 21, 22, 23, 24,
+	25, 26, 27, 28, 29, 0, 31, 0, 0, 12,
+	0, 2, 7, 8, 4, 20, 0, 9, 0, 0,
+	35, 0, 0, 0, 13, 14, 16, 17, 18, 0,
+	0, 30, 10, 0, 0, 5, 0, 11, 32, 15,
+	19, 12, 0, 36, 0, 34, 6, 33, 0, 37,
 }
 var yyTok1 = [...]int{
 
@@ -154,7 +173,7 @@ var yyTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-	22, 23,
+	22, 23, 24, 25, 26,
 }
 var yyTok3 = [...]int{
 	0,
@@ -497,131 +516,140 @@ yydefault:
 	// dummy call; replaced with literal code
 	switch yynt {
 
-	case 1:
-		yyDollar = yyS[yypt-0 : yypt+1]
-		//line syntax.y:55
-		{
-			return 1
-		}
-	case 2:
+	case 8:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:56
+		//line rc.y:82
 		{
-			yylex.(*lexer).tree = yyDollar[1].op
-		}
-	case 4:
-		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:62
-		{
-			yyVAL.op = process.AddCode(yyDollar[1].op, yyDollar[2].op)
-			yylex.(*lexer).tree = yyVAL.op
-		}
-	case 5:
-		yyDollar = yyS[yypt-3 : yypt+1]
-		//line syntax.y:67
-		{
-			yyVAL.op = &process.AssignOp{Lhs: yyDollar[1].word, Rhs: yyDollar[3].word}
-			yylex.(*lexer).tree = yyVAL.op
-		}
-	case 10:
-		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:79
-		{
-			yyVAL.op = &process.WhileOp{}
+			// TODO: Fork
 		}
 	case 11:
-		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:80
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line rc.y:91
 		{
-			yyVAL.op = &process.IfOp{}
+			yyVAL.stack.pushOp(&process.AssignOp{Parent: yyVAL.stack.peekNode(), Var: yyDollar[1].token, Val: yyDollar[3].value})
 		}
 	case 12:
-		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:81
+		yyDollar = yyS[yypt-0 : yypt+1]
+		//line rc.y:96
 		{
-			yyVAL.op = &process.IfOp{Inverse: true}
-		}
-	case 13:
-		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:82
-		{
-			yyVAL.op = &process.TwiddleOp{}
+			yyVAL.values = []*process.Value{}
 		}
 	case 14:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:83
+		//line rc.y:100
 		{
-			yyVAL.op = &process.BangOp{}
+			yyVAL.values = []*process.Value{yyDollar[1].value}
 		}
 	case 15:
-		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:84
+		yyDollar = yyS[yypt-2 : yypt+1]
+		//line rc.y:101
 		{
-			yyVAL.op = &process.SubShellOp{}
+			yyVAL.values = append(yyDollar[1].values, yyDollar[2].value)
 		}
 	case 16:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:85
+		//line rc.y:105
 		{
-			yyVAL.op = &process.SwitchOp{}
+			yyVAL.value = &process.Value{Var: yyDollar[1].token}
+		}
+	case 17:
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:106
+		{
+			yyVAL.value = &process.Value{Str: tokenString(yyDollar[1].token)}
 		}
 	case 18:
-		yyDollar = yyS[yypt-3 : yypt+1]
-		//line syntax.y:89
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:107
 		{
-			yyVAL.op = yyDollar[2].op
+			yyVAL.value = &process.Value{Num: yyDollar[1].token}
 		}
-	case 20:
+	case 19:
 		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:95
+		//line rc.y:108
 		{
-			yyVAL.op = process.AddCode(yyDollar[1].op, yyDollar[2].op)
+			yyVAL.value = &process.Value{Func: yyDollar[2].fcall}
 		}
-	case 21:
-		yyDollar = yyS[yypt-3 : yypt+1]
-		//line syntax.y:98
+	case 23:
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:116
 		{
-			yyVAL.op = &process.FuncOp{Name: yyDollar[2].word}
-			yylex.(*lexer).tree = yyVAL.op
-		}
-	case 22:
-		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:102
-		{
-			yyVAL.op = &process.FuncOp{Name: yyDollar[2].word}
-			yylex.(*lexer).tree = yyVAL.op
+			yyVAL.stack.pushOp(&process.WhileOp{Parent: yyVAL.stack.peekNode()})
 		}
 	case 24:
 		yyDollar = yyS[yypt-1 : yypt+1]
-		//line syntax.y:111
+		//line rc.y:119
 		{
-			yyVAL.word = process.Word(yyDollar[1].ident)
+			yyVAL.stack.pushOp(&process.IfOp{Parent: yyVAL.stack.peekNode()})
 		}
 	case 25:
-		yyDollar = yyS[yypt-5 : yypt+1]
-		//line syntax.y:114
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:122
 		{
-			yyVAL.op = &process.ForOp{Iter: yyDollar[3].word, Code: yyDollar[5].op}
-			yylex.(*lexer).tree = yyVAL.op
+			yyVAL.stack.pushOp(&process.IfOp{Parent: yyVAL.stack.peekNode(), Inverse: true})
 		}
 	case 26:
-		yyDollar = yyS[yypt-7 : yypt+1]
-		//line syntax.y:118
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:125
 		{
-			yyVAL.op = &process.ForOp{Iter: yyDollar[3].word, In: yyDollar[5].word, Code: yyDollar[7].op}
-			yylex.(*lexer).tree = yyVAL.op
+			panic("TODO")
+		}
+	case 27:
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:128
+		{
+			yyVAL.stack.pushOp(&process.SubShell{Parent: yyVAL.stack.peekNode()})
 		}
 	case 28:
-		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:125
+		yyDollar = yyS[yypt-1 : yypt+1]
+		//line rc.y:131
 		{
-			yyVAL.word = process.AddIdent(yyDollar[1].word, yyDollar[2].word)
+			yyVAL.stack.pushOp(&process.SwitchOp{Parent: yyVAL.stack.peekNode()})
 		}
 	case 30:
-		yyDollar = yyS[yypt-2 : yypt+1]
-		//line syntax.y:131
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line rc.y:135
 		{
-			yyVAL.op = process.ForkCode(yyDollar[1].op)
+
+		}
+	case 32:
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line rc.y:141
+		{
+			yyVAL.fcall = &process.FuncCallOp{Parent: yyVAL.stack.peekNode(), Name: yyDollar[1].token, Args: yyDollar[2].values}
+			yyVAL.stack.pushOp(yyVAL.fcall)
+		}
+	case 33:
+		yyDollar = yyS[yypt-4 : yypt+1]
+		//line rc.y:147
+		{
+			yyVAL.stack.pushOp(&process.FuncDefOp{Parent: yyVAL.stack.peekNode(), Name: yyDollar[2].token})
+		}
+	case 34:
+		yyDollar = yyS[yypt-3 : yypt+1]
+		//line rc.y:152
+		{
+			yyVAL.stack.pushOp(&process.SubShell{Parent: yyVAL.stack.peekNode()})
+		}
+	case 35:
+		yyDollar = yyS[yypt-2 : yypt+1]
+		//line rc.y:157
+		{
+			yyVAL.stack.popNode()
+		}
+	case 36:
+		yyDollar = yyS[yypt-4 : yypt+1]
+		//line rc.y:162
+		{
+			// lex.skipnl()
+			yyVAL.stack.pushOp(&process.ForOp{Parent: yyVAL.stack.peekNode(), Iter: yyDollar[3].token})
+		}
+	case 37:
+		yyDollar = yyS[yypt-6 : yypt+1]
+		//line rc.y:166
+		{
+			// lex.skipnl()
+			yyVAL.stack.pushOp(&process.ForOp{Parent: yyVAL.stack.peekNode(), Iter: yyDollar[3].token, Range: yyDollar[5].values})
 		}
 	}
 	goto yystack /* stack new state and value */

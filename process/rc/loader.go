@@ -3,14 +3,25 @@ package rc
 import (
 	"github.com/c2gx/process"
 	"github.com/c2g/c2"
-	"fmt"
 )
 
-func RcScript(script string) (process.Op, error) {
+func Run(script string, env map[string]interface{}) (map[string]interface{}, error) {
+	n, err := Loads(script)
+c2.Debug.Printf(process.Dump(n))
+	if err != nil {
+		return nil, err
+	}
+	return process.Run(n, env)
+}
+
+func Loads(script string) (process.CodeNode, error) {
 	l := lex(script)
 	errCode := yyNewParser().Parse(l)
-	if errCode > 1 {
-		return nil, c2.NewErr(fmt.Sprintf("Could not parse script, err=%d", errCode))
+	if errCode != 0 {
+		return nil, l.lastError
 	}
-	return l.tree, nil
+	if len(l.stack.code) > 0 {
+		return l.stack.code[0], nil
+	}
+	return nil, nil
 }

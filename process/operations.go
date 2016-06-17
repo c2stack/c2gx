@@ -2,142 +2,309 @@ package process
 
 import (
 	"fmt"
+	"github.com/c2g/c2"
+	"bytes"
 )
 
+const dumpIndent = "  "
+
 type Op interface {
-	fmt.Stringer
+	Dump(indent string, buf *bytes.Buffer)
+	ParentNode() CodeNode
+	Exec(stack *Stack) error
 }
 
-type ForOp struct{
-	Iter Ident
-	In   Ident
-	Code Op
+type CodeNode interface {
+	Op
+
+	// If full, then all subsequent code lines should go to parent
+	AddOp(op Op) (full bool)
 }
 
-func (self *ForOp) String() string {
-	return fmt.Sprintf("for (%v in %v) %v", self.Iter, self.In, self.Code)
+// F O R
+///////////
+type ForOp struct {
+	Parent CodeNode
+	Iter   string
+	Range  []*Value
+	code   *CodeBlock
 }
 
-type WhileOp struct{
-	Condition Ident
-	Code      Op
+func (self *ForOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%sfor %v in %v\n", indent, self.Iter, self.Range))
+	self.code.Dump(indent + dumpIndent, buf)
 }
 
-func (self *WhileOp) String() string {
-	return "while"
+func (self *ForOp) AddOp(op Op) bool {
+	self.code = AddCode(self.code, op)
+	return true
 }
 
-type IfOp struct{
-	Inverse bool
-	Code    Op
-}
-func (self *IfOp) String() string {
-	return "if"
+func (self *ForOp) Exec(stack *Stack) error {
+	panic("TODO")
 }
 
-type TwiddleOp struct{
-}
-func (self *TwiddleOp) String() string {
-	return "~"
+func (self *ForOp) ParentNode() CodeNode {
+	return self.Parent
 }
 
-type BangOp struct{
-}
-func (self *BangOp) String() string {
-	return "!"
-}
-
-type SubShellOp struct{
-}
-func (self *SubShellOp) String() string {
-	return "@"
+// W H I L E
+///////////
+type WhileOp struct {
+	Parent    CodeNode
+	Condition *Value
+	code      *CodeBlock
 }
 
-type SwitchOp struct{
-	Cases []Op
-}
-func (self *SwitchOp) String() string {
-	return "switch"
+func (self *WhileOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%swhile %s\n", indent, self.Condition))
+	self.code.Dump(indent + dumpIndent, buf)
 }
 
-type FuncOp struct{
-	Name Ident
-}
-func (self *FuncOp) String() string {
-	return fmt.Sprintf("fn %v", self.Name)
+func (self *WhileOp) AddOp(op Op) bool {
+	self.code = AddCode(self.code, op)
+	return true
 }
 
+
+func (self *WhileOp) Exec(stack *Stack) error {
+	panic("TODO")
+}
+
+func (self *WhileOp) ParentNode() CodeNode {
+	return self.Parent
+}
+
+// I F
+///////////
+type IfOp struct {
+	Parent    CodeNode
+	Inverse   bool
+	Condition Op
+	code      *CodeBlock
+}
+
+func (self *IfOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%sif %s\n", indent, self.Condition))
+	self.code.Dump(indent + dumpIndent, buf)
+}
+
+func (self *IfOp) AddOp(op Op) bool {
+	if self.Condition == nil {
+		self.Condition = op
+	} else {
+		self.code = AddCode(self.code, op)
+	}
+	return true
+}
+
+func (self *IfOp) Exec(stack *Stack) error {
+	panic("TODO")
+}
+func (self *IfOp) ParentNode() CodeNode {
+	return self.Parent
+}
+
+// S U B S H E L L
+///////////
+type SubShell struct {
+	Parent CodeNode
+	code   *CodeBlock
+}
+
+func (self *SubShell) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprint(indent, "@\n"))
+	self.code.Dump(indent + dumpIndent, buf)
+}
+
+func (self *SubShell) AddOp(op Op) bool {
+	self.code = AddCode(self.code, op)
+	return true
+}
+
+func (self *SubShell) Exec(stack *Stack) error {
+	if self.code != nil {
+		return self.code.Exec(stack)
+	}
+	return nil
+}
+func (self *SubShell) ParentNode() CodeNode {
+	return self.Parent
+}
+
+// S W I T C H
+///////////
+type SwitchOp struct {
+	Parent CodeNode
+	code   *CodeBlock
+}
+
+func (self *SwitchOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprint(indent, "switch\n"))
+	self.code.Dump(indent + dumpIndent, buf)
+}
+
+func (self *SwitchOp) AddOp(op Op) bool {
+	self.code = AddCode(self.code, op)
+	return true
+}
+
+func (self *SwitchOp) Exec(stack *Stack) error {
+	panic("TODO")
+}
+func (self *SwitchOp) ParentNode() CodeNode {
+	return self.Parent
+}
+
+// C A S E
+///////////
+type CaseOp struct {
+	Parent     CodeNode
+	Conditions []string
+	code       *CodeBlock
+}
+
+func (self *CaseOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%scase %v\n", indent, self.Conditions))
+	self.code.Dump(indent + dumpIndent, buf)
+}
+
+func (self *CaseOp) AddOp(op Op) bool {
+	self.code = AddCode(self.code, op)
+	return true
+}
+
+func (self *CaseOp) Exec(stack *Stack) error {
+	panic("TODO")
+}
+func (self *CaseOp) ParentNode() CodeNode {
+	return self.Parent
+}
+
+
+// F U N C  C A L L
+///////////
+type FuncCallOp struct {
+	Parent CodeNode
+	Name   string
+	Args   []*Value
+}
+
+func (self *FuncCallOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%s%s(%v)\n", indent, self.Name, self.Args))
+}
+
+func (self *FuncCallOp) AddOp(op Op) bool {
+	return false
+}
+
+func (self *FuncCallOp) Exec(stack *Stack) error {
+	fdef, found := stack.Func(self.Name)
+	if ! found {
+		return c2.NewErr("Function not found")
+	}
+	return fdef.Resolve(stack)
+}
+
+func (self *FuncCallOp) ParentNode() CodeNode {
+	return self.Parent
+}
+
+
+// F U N C  D E F
+///////////
+type FuncDefOp struct {
+	Parent CodeNode
+	Name   string
+	code   *CodeBlock
+}
+
+func (self *FuncDefOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%sfn %s\n", indent, self.Name))
+	self.code.Dump(indent + dumpIndent, buf)
+}
+
+func (self *FuncDefOp) AddOp(op Op) bool {
+	self.code = AddCode(self.code, op)
+	return true
+}
+
+func (self *FuncDefOp) Exec(stack *Stack) error {
+	stack.SetFunc(self.Name, self)
+	return nil
+}
+
+func (self *FuncDefOp) Resolve(stack *Stack) error {
+	return nil
+}
+
+func (self *FuncDefOp) ParentNode() CodeNode {
+	return self.Parent
+}
+
+// A S S I G N
+///////////
 type AssignOp struct {
-	Lhs Ident
-	Rhs Ident
+	Parent CodeNode
+	Var    string
+	Val   *Value
 }
 
-func (self *AssignOp) String() string {
-	return fmt.Sprintf("%v = %v", self.Lhs, self.Rhs)
+func (self *AssignOp) Dump(indent string, buf *bytes.Buffer) {
+	buf.WriteString(fmt.Sprintf("%s%s = %v\n", indent, self.Var, self.Val))
 }
 
-type ForkOp struct {
-	A Op
-	B Op
+//func (self *AssignOp) AddOp(op Op) bool {
+//	self.code = AddCode(self.code, op)
+//	return true
+//}
+//
+func (self *AssignOp) Exec(stack *Stack) error {
+c2.Debug.Printf("here")
+	obj, err := self.Val.Eval(stack)
+	if err != nil {
+		return err
+	}
+	stack.Assign(self.Var, obj)
+	return nil
 }
 
-func (self *ForkOp) String() string {
-	return "fork"
+func (self *AssignOp) ParentNode() CodeNode {
+	return self.Parent
 }
 
+// C O D E  B L O C K
 type CodeBlock struct {
-	Lines []Op
+	code []Op
 }
 
-func (self *CodeBlock) String() string {
-	return fmt.Sprintf("code %v", self.Lines)
-}
-
-func ForkCode(code Op) (*ForkOp) {
-	return &ForkOp{
-		A : code,
+func (self *CodeBlock) Dump(indent string, buf *bytes.Buffer) {
+	if self == nil {
+		return
+	}
+	for _, c := range self.code {
+		c.Dump(indent, buf)
 	}
 }
 
-func AddCode(a Op, b Op) Op {
-	if code, isCode := a.(*CodeBlock); isCode {
-		code.Lines = append(code.Lines, b)
-		return code
-	} else if fork, isFork := a.(*ForkOp); isFork {
-		fork.B = b
-		return &CodeBlock{
-			Lines : []Op{ fork },
+func (self *CodeBlock) AddOp(op Op) bool {
+	self.code = append(self.code, op)
+	return true
+}
+
+func (self *CodeBlock) Exec(stack *Stack) error {
+	for _, op := range self.code {
+		if err := op.Exec(stack); err != nil {
+			return err
 		}
 	}
-	return &CodeBlock{
-		Lines : []Op{ a, b },
+	return nil
+}
+
+func AddCode(block *CodeBlock, op Op) *CodeBlock {
+	if block == nil {
+		return &CodeBlock{code: []Op{op}}
 	}
-}
-
-type Ident interface {
-	fmt.Stringer
-}
-
-type Word string
-
-func (self Word) String() string {
-	return string(self)
-}
-
-type IdentExpression struct {
-	Idents []Ident
-}
-
-func (self *IdentExpression) String() string {
-	return fmt.Sprintf("%v", self.Idents)
-}
-
-func AddIdent(a Ident, b Ident) (*IdentExpression) {
-	if multi, isMulti := a.(*IdentExpression); isMulti {
-		multi.Idents = append(multi.Idents, b)
-		return multi
-	}
-	return &IdentExpression{
-		Idents : []Ident{b},
-	}
+	block.code = append(block.code, op)
+	return block
 }

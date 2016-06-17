@@ -2,10 +2,10 @@ package rc
 
 import (
 	"errors"
-	"strings"
-	"unicode/utf8"
 	"fmt"
-	"github.com/c2gx/process"
+	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // This uses the go feature call go tools in the build process. To ensure this gets
@@ -13,13 +13,19 @@ import (
 //
 //    go generate c2gx/process/rc
 //
-//go:generate go tool yacc -o parser.go syntax.y
+//go:generate go tool yacc -o parser.go rc.y
 type Token struct {
 	typ int
 	val string
 }
 
 const eof rune = 0
+
+const (
+	char_doublequote = '"'
+	char_singlequote = '\''
+	char_backslash   = '\\'
+)
 
 const (
 	ParseEof = iota + 1
@@ -38,7 +44,9 @@ var keywords = [...]string{
 	"=",
 	"^",
 	"!",
-	"[word]",
+	"[ident]",
+	"[string]",
+	"[num]",
 	"for",
 	"in",
 	"while",
@@ -48,6 +56,7 @@ var keywords = [...]string{
 	"@",
 	"switch",
 	"fn",
+	"`",
 }
 
 type stateFunc func(*lexer) stateFunc
@@ -57,7 +66,7 @@ type lexer struct {
 	start     int
 	width     int
 	state     stateFunc
-	tree      process.Op
+	stack     *opStack
 	input     string
 	tokens    []Token
 	head      int
@@ -155,25 +164,72 @@ func (l *lexer) keyword(ttype int) string {
 	return keywords[ttype-token_eol]
 }
 
-const nonWordRunes = "\n \t#;&|^$=`'{}()<>"
-
-func (l *lexer) isWordRune(r rune) bool {
-	return ! strings.ContainsRune(nonWordRunes, r)
+// Any of String, number or ident
+func (l *lexer) acceptValue() bool {
+	if !l.acceptString(token_string) {
+		if !l.acceptNumber(token_number) {
+			return l.acceptIdent(token_ident)
+		}
+	}
+	return false
 }
 
-func (l *lexer) acceptAlphaNumeric(typ int) bool {
-	s := l.input[l.pos:]
-	length := len(s)
-	if length == 0 {
+func (l *lexer) acceptNumber(typ int) bool {
+	for i := 0; true; i++ {
+		r := l.next()
+		if unicode.IsNumber(r) {
+			continue
+		} else if i == 0 {
+			break
+		}
+		l.backup()
+		l.emit(typ)
+		return true
+	}
+	l.pos = l.start
+	return false
+
+}
+
+func (l *lexer) acceptIdent(typ int) bool {
+	for i := 0; true; i++ {
+		r := l.next()
+		if (unicode.IsDigit(r) && i > 0) ||
+			unicode.IsLetter(r) ||
+			(r == '-' && i > 0) ||
+			(r == '.' && i > 0) ||
+			r == '_' {
+			continue
+		}
+		if i == 0 {
+			break
+		}
+		l.backup()
+		l.emit(typ)
+		return true
+	}
+	l.pos = l.start
+	return false
+}
+
+func (l *lexer) acceptString(typ int) bool {
+	r := l.next()
+	if r != char_singlequote {
+		l.backup()
 		return false
 	}
-	length = strings.IndexFunc(s, notRune(l.isWordRune))
-	if length == -1 {
-		length = len(s)
+	for {
+		r = l.next()
+		if r == char_backslash {
+			l.next()
+		} else if r == char_singlequote {
+			l.emit(typ)
+			return true
+		} else if r == eof {
+			// bad format?
+			return false
+		}
 	}
-	l.pos += length
-	l.emit(typ)
-	return true
 }
 
 func notRune(f func(rune) bool) func(rune) bool {
@@ -185,12 +241,12 @@ func notRune(f func(rune) bool) func(rune) bool {
 func (l *lexer) acceptToken(typ int) bool {
 	var keyword = l.keyword(typ)
 	switch typ {
-	case token_word:
-		r, _ := utf8.DecodeRuneInString(l.input[l.pos:])
-		if l.isWordRune(r) {
-			return l.acceptAlphaNumeric(typ)
-		}
-		return false
+	case token_ident:
+		return l.acceptIdent(typ)
+	case token_string:
+		return l.acceptString(typ)
+	case token_number:
+		return l.acceptNumber(typ)
 	}
 	if !strings.HasPrefix(l.input[l.pos:], keyword) {
 		return false
@@ -200,25 +256,25 @@ func (l *lexer) acceptToken(typ int) bool {
 	return true
 }
 
-var looseTokens = [...]int {
+var looseTokens = [...]int{
 	token_eol,
 	token_semi,
 	token_amp,
 	token_eq,
 	token_caret,
 	token_bang,
-}
-
-var kywdTokens = []int {
-	kywd_for,
-	kywd_in,
-	kywd_while,
-	kywd_if,
-	kywd_not,
-	kywd_twiddle,
-	kywd_subshell,
-	kywd_switch,
-	kywd_fn,
+	token_in,
+	token_while,
+	token_if,
+	token_not,
+	token_twiddle,
+	token_subshell,
+	token_switch,
+	token_number,
+	token_ident,
+	token_string,
+	token_closed_brace,
+	token_backtick,
 }
 
 func (l *lexer) error(msg string) stateFunc {
@@ -230,51 +286,55 @@ func (l *lexer) error(msg string) stateFunc {
 	return nil
 }
 
-func (l *lexer) acceptWord() bool {
-	// TODO: expand
-	return l.acceptToken(token_word)
-}
-
 func beginLex(l *lexer) stateFunc {
-	if l.acceptToken(kywd_for) {
-		if ! l.acceptToken(token_open_paren) {
+	if l.acceptToken(token_for) {
+		if !l.acceptToken(token_open_paren) {
 			return l.error("Expected '(' after 'for' statement")
 		}
-		if ! l.acceptWord() {
+		if !l.acceptIdent(token_ident) {
 			return l.error("Expected identifier")
 		}
 
-		if l.acceptToken(kywd_in) {
-			for l.acceptWord() {}
+		if l.acceptToken(token_in) {
+			for {
+				if !l.acceptValue() {
+					if !l.acceptToken(token_closed_paren) {
+						return l.error("Expected value or ')'")
+					}
+				}
+			}
 		}
 
-		if ! l.acceptToken(token_closed_paren) {
+		if !l.acceptToken(token_closed_paren) {
 			return l.error("Expected ')' in 'for' statement")
 		}
 
 		return beginLex
 	}
-	for _, tok := range kywdTokens {
-		if l.acceptToken(tok) {
-			return beginLex
+	if l.acceptToken(token_fn) {
+		if !l.acceptIdent(token_ident) {
+			return l.error("Expected identifier after fn")
 		}
+		if !l.acceptToken(token_open_brace) {
+			return l.error("Expected '{' after fn identifier")
+		}
+		return beginLex
 	}
 	for _, tok := range looseTokens {
 		if l.acceptToken(tok) {
 			return beginLex
 		}
 	}
-	if l.acceptToken(token_word) {
-		return beginLex
-	}
 	return nil
 }
 
 func lex(input string) *lexer {
+	yyDebug = 3 // 0 is off, 4 is most
 	l := &lexer{
 		input:  input,
 		tokens: make([]Token, 128),
 		state:  beginLex,
+		stack:  newStack(),
 	}
 	l.acceptWS()
 	l.state = beginLex(l)
