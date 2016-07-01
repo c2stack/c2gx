@@ -26,8 +26,7 @@ func (self *Endpoint) Schema() (*meta.Module, error) {
 		return nil, err
 	}
 	m := &meta.Module{}
-	c := node.NewContext()
-	if err = c.Selector(node.SelectModule(m, false)).UpsertFrom(in).LastErr; err != nil {
+	if err = node.SelectModule(m, false).Root().Selector().UpsertFrom(in).LastErr; err != nil {
 		return nil, err
 	}
 	self.module = m
