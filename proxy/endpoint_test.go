@@ -1,10 +1,11 @@
-package registrar
+package proxy
 
 import (
 	"testing"
 	"github.com/c2g/meta"
 	"github.com/c2g/node"
 )
+
 
 func TestEndpointProxy(t *testing.T) {
 //	oper := node.NewJsonReader(strings.NewReader(`{"stats":{"crumbTrayCapacity":98}}`)).Node()

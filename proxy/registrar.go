@@ -1,15 +1,26 @@
-package registrar
+package proxy
 
 import (
 	"fmt"
 	"github.com/c2g/meta"
+	"github.com/c2g/node"
 	"time"
 )
+
+type ConfigStoreSource interface {
+	ConfigStore(endpoint *Endpoint) (ConfigStore, error)
+}
+
+type ConfigStore interface {
+	ConfigNode(path string) (node.Node, error)
+	SaveConfig() error
+}
 
 type Registrar struct {
 	Endpoints            map[string]*Endpoint
 	SchemaInsertionPoint *meta.Choice
 	StoreDir             string
+	TxSource             ConfigStoreSource
 }
 
 func (self *Registrar) RegisterEndpoint(endpoint *Endpoint) error {
@@ -21,19 +32,18 @@ func (self *Registrar) RegisterEndpoint(endpoint *Endpoint) error {
 		endpoint.Id = uuid
 	}
 
-	fs := &FileStorageHandler{Dir: self.StoreDir, Id: endpoint.Id}
-	endpoint.Store = fs.Store()
-
 	if module, err := endpoint.Schema(); err != nil {
 		return err
 	} else {
 		kase := &meta.ChoiceCase{Ident: module.GetIdent()}
 		self.SchemaInsertionPoint.AddMeta(kase)
 		kase.AddMeta(module)
+		endpoint.TxSource = self.TxSource
 	}
 	if self.Endpoints == nil {
 		self.Endpoints = make(map[string]*Endpoint)
 	}
 	self.Endpoints[endpoint.Id] = endpoint
+
 	return nil
 }

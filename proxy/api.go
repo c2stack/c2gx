@@ -1,4 +1,4 @@
-package registrar
+package proxy
 
 import (
 	"github.com/c2g/node"
@@ -35,13 +35,13 @@ func (self Api) Endpoint(endpoint *Endpoint) node.Node {
 	return &node.Extend{
 		Node: node.MarshalContainer(endpoint),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
-			if r.Meta == endpoint.module {
-				return endpoint.Proxy(r.Target)
+			if r.Meta == endpoint.Meta {
+				return endpoint.handleRequest(r.Target)
 			}
 			return p.Select(r)
 		},
 		OnChoose: func(p node.Node, sel *node.Selection, choice *meta.Choice) (*meta.ChoiceCase, error) {
-			return choice.GetCase(endpoint.module.GetIdent()), nil
+			return choice.GetCase(endpoint.Meta.GetIdent()), nil
 		},
 	}
 }
