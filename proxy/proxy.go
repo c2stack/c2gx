@@ -6,7 +6,6 @@ import (
 	"github.com/c2g/node"
 	"io"
 	"strings"
-	"github.com/c2g/c2"
 )
 
 type EndpointRequest func(method string, url string, payload io.Reader) (io.ReadCloser, error)
@@ -39,7 +38,6 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			var err error
 			var remoteChild, configChild node.Node
 			isconfig := r.Selection.IsConfig(r.Meta)
-c2.Debug.Printf("%s isconfig %v", r.Meta.GetIdent(), isconfig)
 			if config != nil {
 				if configChild, err = config.Select(r); err != nil || (configChild == nil && isconfig) {
 					return nil, err
@@ -63,7 +61,6 @@ c2.Debug.Printf("%s isconfig %v", r.Meta.GetIdent(), isconfig)
 			}
 			newpos := make(map[string]interface{})
 			edits[r.Meta.GetIdent()] = newpos
-c2.Debug.Printf("s=%s, meta=%s, tail=%p, config=%p, configChild=%p, remoteChild=%p", r.Selection.Path().String(), r.Meta.GetIdent(), r.Target.Tail, config, configChild, remoteChild)
 			return self.container(configChild, remoteChild, false, newpos), err
 		},
 		OnNext: func(r node.ListRequest) (node.Node, []*node.Value, error) {
@@ -100,7 +97,6 @@ c2.Debug.Printf("s=%s, meta=%s, tail=%p, config=%p, configChild=%p, remoteChild=
 				item = list
 			}
 			edits[r.Meta.GetIdent()] = item
-c2.Debug.Printf("s=%s, tail=%p, configChild=%p, remoteChild=%p", r.Selection.Path().String(), r.Target.Tail, configChild, remoteChild)
 			return self.container(configChild, remoteChild, false, newpos), key, err
 		},
 		OnEvent: func(s *node.Selection, e node.Event) error {
@@ -120,7 +116,6 @@ c2.Debug.Printf("s=%s, tail=%p, configChild=%p, remoteChild=%p", r.Selection.Pat
 				}
 				var buf bytes.Buffer
 				js := node.NewJsonWriter(&buf).Node()
-c2.Debug.Printf("meta %s, edits=%v", s.Meta().GetIdent(), self.edits)
 				b := node.NewBrowser2(s.Meta().(meta.MetaList), node.MapNode(self.edits))
 				if err := b.Root().Selector().InsertInto(js).LastErr; err != nil {
 					return err
