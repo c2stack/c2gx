@@ -9,6 +9,7 @@ import (
 )
 
 type Endpoint struct {
+	YangPath        meta.StreamSource
 	Id              string
 	Module          string
 	Meta            *meta.Module
@@ -26,7 +27,7 @@ func (self *Endpoint) Schema() (*meta.Module, error) {
 		return nil, err
 	}
 	m := &meta.Module{}
-	if err = node.SelectModule(m, false).Root().Selector().UpsertFrom(in).LastErr; err != nil {
+	if err = node.SelectModule(self.YangPath, m, false).Root().Selector().UpsertFrom(in).LastErr; err != nil {
 		return nil, err
 	}
 	self.Meta = m

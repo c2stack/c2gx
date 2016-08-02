@@ -17,6 +17,7 @@ type ConfigStore interface {
 }
 
 type Registrar struct {
+	YangPath             meta.StreamSource
 	Endpoints            map[string]*Endpoint
 	SchemaInsertionPoint *meta.Choice
 	StoreDir             string

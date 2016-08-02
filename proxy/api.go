@@ -14,7 +14,7 @@ func (self Api) Registrar(registrar *Registrar) node.Node {
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "endpoint":
-				if self.Registrar != nil {
+				if registrar.Endpoints != nil {
 					return self.Endpoints(registrar), nil
 				}
 				return nil, nil
@@ -57,12 +57,14 @@ func (self Api) Endpoints(registrar *Registrar) node.Node {
 }
 
 func (self Api) RegisterEndpoint(registrar *Registrar, sel *node.Selection, rpc *meta.Rpc, input *node.Selection) (output node.Node, err error) {
-	var reg Endpoint
-	regNode := node.MarshalContainer(&reg)
+	reg := &Endpoint{
+		YangPath: registrar.YangPath,
+	}
+	regNode := node.MarshalContainer(reg)
 	if err = input.Selector().UpsertInto(regNode).LastErr; err != nil {
 		return nil, err
 	}
-	if err = registrar.RegisterEndpoint(&reg); err != nil {
+	if err = registrar.RegisterEndpoint(reg); err != nil {
 		return nil, err
 	}
 	return regNode, nil
