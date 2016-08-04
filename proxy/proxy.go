@@ -135,18 +135,19 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			}
 			return nil
 		},
-		OnRead: func(r node.FieldRequest) (v *node.Value, err error) {
-			if config != nil {
-				v, err = config.Read(r)
-			}
-			if remote != nil && v == nil && err == nil {
-				v, err = remote.Read(r)
+		OnField: func(r node.FieldRequest, hnd *node.ValueHandle) (err error) {
+			if r.Write {
+				edits[r.Meta.GetIdent()] = hnd.Val.Value()
+				err = config.Field(r, hnd)
+			} else {
+				if config != nil {
+					err = config.Field(r, hnd)
+				}
+				if remote != nil && hnd.Val == nil && err == nil {
+					err = remote.Field(r, hnd)
+				}
 			}
 			return
-		},
-		OnWrite: func(r node.FieldRequest, v *node.Value) error {
-			edits[r.Meta.GetIdent()] = v.Value()
-			return config.Write(r, v)
 		},
 		OnAction: func(r node.ActionRequest) (node.Node, error) {
 			var buf bytes.Buffer
