@@ -59,6 +59,7 @@ func (self Api) Endpoints(registrar *Registrar) node.Node {
 func (self Api) RegisterEndpoint(registrar *Registrar, sel *node.Selection, rpc *meta.Rpc, input *node.Selection) (output node.Node, err error) {
 	reg := &Endpoint{
 		YangPath: registrar.YangPath,
+		ClientSource : registrar.ClientSource,
 	}
 	regNode := node.MarshalContainer(reg)
 	if err = input.Selector().UpsertInto(regNode).LastErr; err != nil {

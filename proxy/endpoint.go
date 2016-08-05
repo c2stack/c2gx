@@ -6,6 +6,7 @@ import (
 	"github.com/c2g/node"
 	"io"
 	"net/http"
+	"github.com/c2g/browse"
 )
 
 type Endpoint struct {
@@ -15,6 +16,7 @@ type Endpoint struct {
 	Meta            *meta.Module
 	EndpointAddress string
 	TxSource        ConfigStoreSource
+	ClientSource    browse.ClientSource
 	basePath        *node.Path
 }
 
@@ -84,7 +86,7 @@ func (self *Endpoint) request(method string, url string, payload io.Reader) (io.
 		return nil, err
 	}
 	req.Header.Set("Accept", "application/json")
-	client := http.DefaultClient
+	client := self.ClientSource.GetHttpClient()
 	c2.Info.Printf("%s %s", method, fullUrl)
 	resp, getErr := client.Do(req)
 	if getErr != nil {

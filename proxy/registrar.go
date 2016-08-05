@@ -2,6 +2,7 @@ package proxy
 
 import (
 	"fmt"
+	"github.com/c2g/browse"
 	"github.com/c2g/meta"
 	"github.com/c2g/node"
 	"time"
@@ -22,6 +23,7 @@ type Registrar struct {
 	SchemaInsertionPoint *meta.Choice
 	StoreDir             string
 	TxSource             ConfigStoreSource
+	ClientSource         browse.ClientSource
 }
 
 func (self *Registrar) RegisterEndpoint(endpoint *Endpoint) error {
