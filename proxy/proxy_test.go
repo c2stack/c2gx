@@ -8,9 +8,10 @@ import (
 	"io/ioutil"
 	"strings"
 	"testing"
+	"github.com/c2g/meta"
 )
 
-func TestProxy(t *testing.T) {
+func proxyTestModule() *meta.Module {
 	mstr := `module test {
 	namespace "";
 	prefix "";
@@ -60,8 +61,27 @@ func TestProxy(t *testing.T) {
 }`
 	m, err := yang.LoadModuleFromString(nil, mstr)
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
+	return m
+}
+
+func TestProxyNavigate(t *testing.T) {
+	m := proxyTestModule()
+	target := &node.MyNode{}
+	n := navigate("b/bd", target)
+	b := node.NewBrowser2(m, n)
+	sel := b.Root().Selector().Find("b/bd")
+	if sel.LastErr != nil {
+		t.Fatal(sel.LastErr)
+	}
+	if sel.Selection.Node() != target {
+		t.Error("Target not expected")
+	}
+}
+
+func TestProxy(t *testing.T) {
+	m := proxyTestModule()
 	operational := node.NewJsonReader(strings.NewReader(`{"a":{"aa":"a.aa"}}`)).Node()
 	config := node.MapNode(map[string]interface{}{
 		"b": map[string]interface{}{

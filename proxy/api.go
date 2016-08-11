@@ -35,13 +35,27 @@ func (self Api) Endpoint(endpoint *Endpoint) node.Node {
 	return &node.Extend{
 		Node: node.MarshalContainer(endpoint),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
-			if r.Meta == endpoint.Meta {
+			if r.Meta.GetIdent() == endpoint.Meta.GetIdent() {
 				return endpoint.handleRequest(r.Target)
 			}
 			return p.Select(r)
 		},
 		OnChoose: func(p node.Node, sel *node.Selection, choice *meta.Choice) (*meta.ChoiceCase, error) {
 			return choice.GetCase(endpoint.Meta.GetIdent()), nil
+		},
+		OnAction: func(p node.Node, r node.ActionRequest) (node.Node, error) {
+			switch r.Meta.GetIdent() {
+			case "syncConfig":
+				if err := endpoint.pushConfig(); err != nil {
+					return nil, err
+				}
+				return nil, endpoint.pullConfig()
+			case "pushConfig":
+				return nil, endpoint.pushConfig()
+			case "pullConfig":
+				return nil, endpoint.pullConfig()
+			}
+			return p.Action(r)
 		},
 	}
 }

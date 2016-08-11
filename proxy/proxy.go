@@ -32,9 +32,6 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 	return &node.MyNode{
 		Label: "proxy",
 		OnSelect: func(r node.ContainerRequest) (node.Node, error) {
-			if r.Target.Tail != nil {
-				return r.Selection.Node(), nil
-			}
 			var err error
 			var remoteChild, configChild node.Node
 			isconfig := r.Selection.IsConfig(r.Meta)
@@ -64,9 +61,6 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			return self.container(configChild, remoteChild, false, newpos), err
 		},
 		OnNext: func(r node.ListRequest) (node.Node, []*node.Value, error) {
-			if r.Target.Tail != nil {
-				return r.Selection.Node(), r.Key, nil
-			}
 			var err error
 			var key = r.Key
 			var remoteChild, configChild node.Node
