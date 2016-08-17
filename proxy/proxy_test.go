@@ -1,14 +1,14 @@
 package proxy
 
 import (
-	"github.com/c2g/c2"
-	"github.com/c2g/meta/yang"
-	"github.com/c2g/node"
+	"github.com/dhubler/c2g/c2"
+	"github.com/dhubler/c2g/meta/yang"
+	"github.com/dhubler/c2g/node"
 	"io"
 	"io/ioutil"
 	"strings"
 	"testing"
-	"github.com/c2g/meta"
+	"github.com/dhubler/c2g/meta"
 )
 
 func proxyTestModule() *meta.Module {

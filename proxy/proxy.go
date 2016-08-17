@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"bytes"
-	"github.com/c2g/meta"
-	"github.com/c2g/node"
+	"github.com/dhubler/c2g/meta"
+	"github.com/dhubler/c2g/node"
 	"io"
 	"strings"
 )

@@ -1,7 +1,7 @@
 package rc
 
 import (
-	"github.com/c2gx/process"
+	"github.com/dhubler/c2gx/process"
 )
 
 type opStack struct {

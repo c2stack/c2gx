@@ -4,7 +4,7 @@ package rc
 import __yyfmt__ "fmt"
 
 //line rc.y:2
-import "github.com/c2gx/process"
+import "github.com/dhubler/c2gx/process"
 
 // Parser for Rc
 //  https://en.wikipedia.org/wiki/Rc

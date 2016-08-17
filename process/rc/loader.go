@@ -1,8 +1,8 @@
 package rc
 
 import (
-	"github.com/c2gx/process"
-	"github.com/c2g/c2"
+	"github.com/dhubler/c2gx/process"
+	"github.com/dhubler/c2g/c2"
 )
 
 func Run(script string, env map[string]interface{}) (map[string]interface{}, error) {

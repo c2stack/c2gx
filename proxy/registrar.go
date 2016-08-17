@@ -2,9 +2,9 @@ package proxy
 
 import (
 	"fmt"
-	"github.com/c2g/browse"
-	"github.com/c2g/meta"
-	"github.com/c2g/node"
+	"github.com/dhubler/c2g/browse"
+	"github.com/dhubler/c2g/meta"
+	"github.com/dhubler/c2g/node"
 	"time"
 )
 
