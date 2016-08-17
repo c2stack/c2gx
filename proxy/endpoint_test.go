@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"testing"
-	"github.com/dhubler/c2g/meta"
-	"github.com/dhubler/c2g/node"
+	"github.com/c2stack/c2g/meta"
+	"github.com/c2stack/c2g/node"
 )
 
 

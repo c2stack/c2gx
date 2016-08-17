@@ -2,7 +2,7 @@ package rc
 
 import (
 	"fmt"
-	"github.com/dhubler/c2gx/process"
+	"github.com/c2stack/c2gx/process"
 	"testing"
 )
 
