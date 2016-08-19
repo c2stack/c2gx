@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"fmt"
 	"bytes"
-	"os"
 )
 
 type Endpoint struct {
@@ -32,7 +31,7 @@ func (self *Endpoint) Schema() (*meta.Module, error) {
 		return nil, err
 	}
 	m := &meta.Module{}
-	if err = node.SelectModule(self.YangPath, m, false).Root().Selector().UpsertFrom(in).LastErr; err != nil {
+	if err = node.SelectModule(self.YangPath, m, false).Root().UpsertFrom(in).LastErr; err != nil {
 		return nil, err
 	}
 	self.Meta = m
@@ -51,10 +50,10 @@ func navigate(target string, n node.Node) node.Node {
 		return e
 	}
 	e.OnSelect = func(r node.ContainerRequest) (node.Node, error) {
-		return checkTarget(fmt.Sprint(r.Selection.Path().StringNoModule(), "/", r.Meta.GetIdent())), nil
+		return checkTarget(fmt.Sprint(r.Selection.Path.StringNoModule(), "/", r.Meta.GetIdent())), nil
 	}
 	e.OnNext = func(r node.ListRequest) (node.Node, []*node.Value, error) {
-		return checkTarget(fmt.Sprint(r.Selection.Path().StringNoModule(), "=", node.EncodeKey(r.Key))), r.Key, nil
+		return checkTarget(fmt.Sprint(r.Selection.Path.StringNoModule(), "=", node.EncodeKey(r.Key))), r.Key, nil
 	}
 	return e
 }
@@ -117,7 +116,7 @@ func (self *Endpoint) pushConfig() error {
 	}
 	var payload bytes.Buffer
 	payloadNode := node.NewJsonWriter(&payload).Node()
-	if err := node.NewBrowser2(self.Meta, localConfig).Root().Selector().InsertInto(payloadNode).LastErr; err != nil {
+	if err := node.NewBrowser2(self.Meta, localConfig).Root().InsertInto(payloadNode).LastErr; err != nil {
 		return err
 	}
 	if _, err := self.request("PUT", "restconf/", &payload); err != nil {
@@ -139,7 +138,7 @@ func (self *Endpoint) pullConfig() error {
 	if beginTxErr != nil && ! c2.IsNotFoundErr(beginTxErr) {
 		return beginTxErr
 	}
-	if err := node.NewBrowser2(self.Meta, node.Dump(localConfig, os.Stdout)).Root().Selector().UpsertFrom(remoteConfig).LastErr; err != nil {
+	if err := node.NewBrowser2(self.Meta, localConfig).Root().UpsertFrom(remoteConfig).LastErr; err != nil {
 		return err
 	}
 	return tx.SaveConfig()

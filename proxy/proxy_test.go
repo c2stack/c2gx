@@ -71,11 +71,11 @@ func TestProxyNavigate(t *testing.T) {
 	target := &node.MyNode{}
 	n := navigate("b/bd", target)
 	b := node.NewBrowser2(m, n)
-	sel := b.Root().Selector().Find("b/bd")
+	sel := b.Root().Find("b/bd")
 	if sel.LastErr != nil {
 		t.Fatal(sel.LastErr)
 	}
-	if sel.Selection.Node() != target {
+	if sel.Node != target {
 		t.Error("Target not expected")
 	}
 }
@@ -136,7 +136,7 @@ func TestProxy(t *testing.T) {
 			},
 		}
 		n := proxy.proxy(config, operational)
-		s := node.NewBrowser2(m, n).Root().Selector().Find(test.find)
+		s := node.NewBrowser2(m, n).Root().Find(test.find)
 		if err := s.InsertFrom(edit).LastErr; err != nil {
 			t.Error(err)
 		}

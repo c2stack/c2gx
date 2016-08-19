@@ -93,13 +93,13 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			edits[r.Meta.GetIdent()] = item
 			return self.container(configChild, remoteChild, false, newpos), key, err
 		},
-		OnEvent: func(s *node.Selection, e node.Event) error {
+		OnEvent: func(s node.Selection, e node.Event) error {
 			switch e.Type {
 			case node.DELETE:
 				if err := self.dispatch(config, s, e); err != nil {
 					return err
 				}
-				if _, err := self.onRequest("DELETE", self.url(s.Path()), nil); err != nil {
+				if _, err := self.onRequest("DELETE", self.url(s.Path), nil); err != nil {
 					return err
 				}
 				return self.onCommit()
@@ -111,10 +111,10 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 				var buf bytes.Buffer
 				js := node.NewJsonWriter(&buf).Node()
 				b := node.NewBrowser2(s.Meta().(meta.MetaList), node.MapNode(self.edits))
-				if err := b.Root().Selector().InsertInto(js).LastErr; err != nil {
+				if err := b.Root().InsertInto(js).LastErr; err != nil {
 					return err
 				}
-				if _, err := self.onRequest(self.method, self.url(s.Path()), &buf); err != nil {
+				if _, err := self.onRequest(self.method, self.url(s.Path), &buf); err != nil {
 					return err
 				}
 
@@ -146,10 +146,10 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 		OnAction: func(r node.ActionRequest) (node.Node, error) {
 			var buf bytes.Buffer
 			js := node.NewJsonWriter(&buf).Node()
-			if err := r.Input.Selector().InsertInto(js).LastErr; err != nil {
+			if err := r.Input.InsertInto(js).LastErr; err != nil {
 				return nil, err
 			}
-			body, err := self.onRequest("POST", self.url(r.Selection.Path()), &buf)
+			body, err := self.onRequest("POST", self.url(r.Selection.Path), &buf)
 			if err != nil {
 				return nil, err
 			}
@@ -159,7 +159,7 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			}
 			return output, nil
 		},
-		OnChoose: func(sel *node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
+		OnChoose: func(sel node.Selection, choice *meta.Choice) (m *meta.ChoiceCase, err error) {
 			if config != nil {
 				m, err = config.Choose(sel, choice)
 			}
@@ -171,7 +171,7 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 	}
 }
 
-func (self *proxy) dispatch(n node.Node, s *node.Selection, e node.Event) error {
+func (self *proxy) dispatch(n node.Node, s node.Selection, e node.Event) error {
 	if n != nil {
 		return n.Event(s, e)
 	}

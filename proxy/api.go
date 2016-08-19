@@ -40,7 +40,7 @@ func (self Api) Endpoint(endpoint *Endpoint) node.Node {
 			}
 			return p.Select(r)
 		},
-		OnChoose: func(p node.Node, sel *node.Selection, choice *meta.Choice) (*meta.ChoiceCase, error) {
+		OnChoose: func(p node.Node, sel node.Selection, choice *meta.Choice) (*meta.ChoiceCase, error) {
 			return choice.GetCase(endpoint.Meta.GetIdent()), nil
 		},
 		OnAction: func(p node.Node, r node.ActionRequest) (node.Node, error) {
@@ -70,13 +70,13 @@ func (self Api) Endpoints(registrar *Registrar) node.Node {
 	return n.Node()
 }
 
-func (self Api) RegisterEndpoint(registrar *Registrar, sel *node.Selection, rpc *meta.Rpc, input *node.Selection) (output node.Node, err error) {
+func (self Api) RegisterEndpoint(registrar *Registrar, sel node.Selection, rpc *meta.Rpc, input node.Selection) (output node.Node, err error) {
 	reg := &Endpoint{
 		YangPath: registrar.YangPath,
 		ClientSource : registrar.ClientSource,
 	}
 	regNode := node.MarshalContainer(reg)
-	if err = input.Selector().UpsertInto(regNode).LastErr; err != nil {
+	if err = input.UpsertInto(regNode).LastErr; err != nil {
 		return nil, err
 	}
 	if err = registrar.RegisterEndpoint(reg); err != nil {
