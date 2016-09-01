@@ -5,17 +5,14 @@ import (
 	"github.com/c2stack/c2g/meta"
 )
 
-type Api struct {
-}
-
-func (self Api) Registrar(registrar *Registrar) node.Node {
+func RegistrarNode(registrar *Registrar) node.Node {
 	return &node.Extend{
 		Node: node.MarshalContainer(registrar),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "endpoint":
 				if registrar.Endpoints != nil {
-					return self.Endpoints(registrar), nil
+					return EndpointsNode(registrar), nil
 				}
 				return nil, nil
 			}
@@ -24,14 +21,14 @@ func (self Api) Registrar(registrar *Registrar) node.Node {
 		OnAction: func(p node.Node, r node.ActionRequest) (output node.Node, err error) {
 			switch r.Meta.GetIdent() {
 			case "register":
-				return self.RegisterEndpoint(registrar, r.Selection, r.Meta, r.Input)
+				return RegisterEndpointNode(registrar, r.Selection, r.Meta, r.Input)
 			}
 			return p.Action(r)
 		},
 	}
 }
 
-func (self Api) Endpoint(endpoint *Endpoint) node.Node {
+func EndpointNode(endpoint *Endpoint) node.Node {
 	return &node.Extend{
 		Node: node.MarshalContainer(endpoint),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
@@ -60,17 +57,17 @@ func (self Api) Endpoint(endpoint *Endpoint) node.Node {
 	}
 }
 
-func (self Api) Endpoints(registrar *Registrar) node.Node {
+func EndpointsNode(registrar *Registrar) node.Node {
 	n := &node.MarshalMap{
 		Map: registrar.Endpoints,
 		OnSelectItem: func(item interface{}) node.Node {
-			return self.Endpoint(item.(*Endpoint))
+			return EndpointNode(item.(*Endpoint))
 		},
 	}
 	return n.Node()
 }
 
-func (self Api) RegisterEndpoint(registrar *Registrar, sel node.Selection, rpc *meta.Rpc, input node.Selection) (output node.Node, err error) {
+func RegisterEndpointNode(registrar *Registrar, sel node.Selection, rpc *meta.Rpc, input node.Selection) (output node.Node, err error) {
 	reg := &Endpoint{
 		YangPath: registrar.YangPath,
 		ClientSource : registrar.ClientSource,
