@@ -93,41 +93,24 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			edits[r.Meta.GetIdent()] = item
 			return self.container(configChild, remoteChild, false, newpos), key, err
 		},
-		OnEvent: func(s node.Selection, e node.Event) error {
-			switch e.Type {
-			case node.DELETE:
-				if err := self.dispatch(config, s, e); err != nil {
-					return err
-				}
-				if _, err := self.onRequest("DELETE", self.url(s.Path), nil); err != nil {
-					return err
-				}
-				return self.onCommit()
-			case node.END_TREE_EDIT:
-				e.StopPropagation()
-				if err := self.dispatch(config, s, e); err != nil {
-					return err
-				}
-				var buf bytes.Buffer
-				js := node.NewJsonWriter(&buf).Node()
-				b := node.NewBrowser2(s.Meta().(meta.MetaList), node.MapNode(self.edits))
-				if err := b.Root().InsertInto(js).LastErr; err != nil {
-					return err
-				}
-				if _, err := self.onRequest(self.method, self.url(s.Path), &buf); err != nil {
-					return err
-				}
-
-				return self.onCommit()
-			default:
-				if err := self.dispatch(remote, s, e); err != nil {
-					return err
-				}
-				if err := self.dispatch(config, s, e); err != nil {
-					return err
-				}
+		OnEndEdit:func (r node.NodeRequest) error {
+			var buf bytes.Buffer
+			js := node.NewJsonWriter(&buf).Node()
+			b := node.NewBrowser2(r.Selection.Meta().(meta.MetaList), node.MapNode(self.edits))
+			if err := b.Root().InsertInto(js).LastErr; err != nil {
+				return err
 			}
-			return nil
+			if _, err := self.onRequest(self.method, self.url(r.Selection.Path), &buf); err != nil {
+				return err
+			}
+
+			return self.onCommit()
+		},
+		OnDelete:func(r node.NodeRequest) error {
+			if _, err := self.onRequest("DELETE", self.url(r.Selection.Path), nil); err != nil {
+				return err
+			}
+			return self.onCommit()
 		},
 		OnField: func(r node.FieldRequest, hnd *node.ValueHandle) (err error) {
 			if r.Write {
@@ -169,11 +152,4 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			return
 		},
 	}
-}
-
-func (self *proxy) dispatch(n node.Node, s node.Selection, e node.Event) error {
-	if n != nil {
-		return n.Event(s, e)
-	}
-	return nil
 }

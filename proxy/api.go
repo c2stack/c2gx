@@ -1,8 +1,8 @@
 package proxy
 
 import (
-	"github.com/c2stack/c2g/node"
 	"github.com/c2stack/c2g/meta"
+	"github.com/c2stack/c2g/node"
 )
 
 func RegistrarNode(registrar *Registrar) node.Node {
@@ -33,7 +33,7 @@ func EndpointNode(endpoint *Endpoint) node.Node {
 		Node: node.MarshalContainer(endpoint),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
 			if r.Meta.GetIdent() == endpoint.Meta.GetIdent() {
-				return endpoint.handleRequest(r.Target)
+				return endpoint.handleRequest(node.PathSlice{Head: r.Path, Tail: r.Target})
 			}
 			return p.Select(r)
 		},
@@ -69,8 +69,8 @@ func EndpointsNode(registrar *Registrar) node.Node {
 
 func RegisterEndpointNode(registrar *Registrar, sel node.Selection, rpc *meta.Rpc, input node.Selection) (output node.Node, err error) {
 	reg := &Endpoint{
-		YangPath: registrar.YangPath,
-		ClientSource : registrar.ClientSource,
+		YangPath:     registrar.YangPath,
+		ClientSource: registrar.ClientSource,
 	}
 	regNode := node.MarshalContainer(reg)
 	if err = input.UpsertInto(regNode).LastErr; err != nil {
@@ -81,4 +81,3 @@ func RegisterEndpointNode(registrar *Registrar, sel node.Selection, rpc *meta.Rp
 	}
 	return regNode, nil
 }
-
