@@ -31,19 +31,19 @@ func (self *proxy) url(p *node.Path) string {
 func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool, edits map[string]interface{}) node.Node {
 	return &node.MyNode{
 		Label: "proxy",
-		OnSelect: func(r node.ContainerRequest) (node.Node, error) {
+		OnChild: func(r node.ChildRequest) (node.Node, error) {
 			var err error
 			var remoteChild, configChild node.Node
 			isconfig := r.Selection.IsConfig(r.Meta)
 			if config != nil {
-				if configChild, err = config.Select(r); err != nil || (configChild == nil && isconfig) {
+				if configChild, err = config.Child(r); err != nil || (configChild == nil && isconfig) {
 					return nil, err
 				}
 			}
 			if remote != nil {
 				readOnlyRequest := r
 				readOnlyRequest.New = false
-				if remoteChild, err = remote.Select(readOnlyRequest); err != nil {
+				if remoteChild, err = remote.Child(readOnlyRequest); err != nil {
 					return nil, err
 				}
 			}

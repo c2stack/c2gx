@@ -49,7 +49,7 @@ func navigate(target string, n node.Node) node.Node {
 
 		return e
 	}
-	e.OnSelect = func(r node.ContainerRequest) (node.Node, error) {
+	e.OnChild = func(r node.ChildRequest) (node.Node, error) {
 		return checkTarget(fmt.Sprint(r.Selection.Path.StringNoModule(), "/", r.Meta.GetIdent())), nil
 	}
 	e.OnNext = func(r node.ListRequest) (node.Node, []*node.Value, error) {

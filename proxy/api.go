@@ -8,7 +8,7 @@ import (
 func RegistrarNode(registrar *Registrar) node.Node {
 	return &node.Extend{
 		Node: node.ReflectNode(registrar),
-		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
+		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "endpoint":
 				if registrar.Endpoints != nil {
@@ -16,7 +16,7 @@ func RegistrarNode(registrar *Registrar) node.Node {
 				}
 				return nil, nil
 			}
-			return p.Select(r)
+			return p.Child(r)
 		},
 		OnAction: func(p node.Node, r node.ActionRequest) (output node.Node, err error) {
 			switch r.Meta.GetIdent() {
@@ -31,11 +31,11 @@ func RegistrarNode(registrar *Registrar) node.Node {
 func EndpointNode(endpoint *Endpoint) node.Node {
 	return &node.Extend{
 		Node: node.ReflectNode(endpoint),
-		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
+		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			if r.Meta.GetIdent() == endpoint.Meta.GetIdent() {
 				return endpoint.handleRequest(node.PathSlice{Head: r.Path, Tail: r.Target})
 			}
-			return p.Select(r)
+			return p.Child(r)
 		},
 		OnChoose: func(p node.Node, sel node.Selection, choice *meta.Choice) (*meta.ChoiceCase, error) {
 			return choice.GetCase(endpoint.Meta.GetIdent()), nil
