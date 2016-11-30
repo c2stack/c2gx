@@ -7,7 +7,7 @@ import (
 
 func RegistrarNode(registrar *Registrar) node.Node {
 	return &node.Extend{
-		Node: node.MarshalContainer(registrar),
+		Node: node.ReflectNode(registrar),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "endpoint":
@@ -30,7 +30,7 @@ func RegistrarNode(registrar *Registrar) node.Node {
 
 func EndpointNode(endpoint *Endpoint) node.Node {
 	return &node.Extend{
-		Node: node.MarshalContainer(endpoint),
+		Node: node.ReflectNode(endpoint),
 		OnSelect: func(p node.Node, r node.ContainerRequest) (node.Node, error) {
 			if r.Meta.GetIdent() == endpoint.Meta.GetIdent() {
 				return endpoint.handleRequest(node.PathSlice{Head: r.Path, Tail: r.Target})
@@ -72,7 +72,7 @@ func RegisterEndpointNode(registrar *Registrar, sel node.Selection, rpc *meta.Rp
 		YangPath:     registrar.YangPath,
 		ClientSource: registrar.ClientSource,
 	}
-	regNode := node.MarshalContainer(reg)
+	regNode := node.ReflectNode(reg)
 	if err = input.UpsertInto(regNode).LastErr; err != nil {
 		return nil, err
 	}

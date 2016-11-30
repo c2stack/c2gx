@@ -93,10 +93,10 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 			edits[r.Meta.GetIdent()] = item
 			return self.container(configChild, remoteChild, false, newpos), key, err
 		},
-		OnEndEdit:func (r node.NodeRequest) error {
+		OnEndEdit: func(r node.NodeRequest) error {
 			var buf bytes.Buffer
 			js := node.NewJsonWriter(&buf).Node()
-			b := node.NewBrowser2(r.Selection.Meta().(meta.MetaList), node.MapNode(self.edits))
+			b := node.NewBrowser(r.Selection.Meta().(meta.MetaList), node.MapNode(self.edits))
 			if err := b.Root().InsertInto(js).LastErr; err != nil {
 				return err
 			}
@@ -106,7 +106,7 @@ func (self *proxy) container(config node.Node, remote node.Node, firstLevel bool
 
 			return self.onCommit()
 		},
-		OnDelete:func(r node.NodeRequest) error {
+		OnDelete: func(r node.NodeRequest) error {
 			if _, err := self.onRequest("DELETE", self.url(r.Selection.Path), nil); err != nil {
 				return err
 			}

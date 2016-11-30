@@ -1,14 +1,14 @@
 package proxy
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/c2stack/c2g/browse"
 	"github.com/c2stack/c2g/c2"
 	"github.com/c2stack/c2g/meta"
 	"github.com/c2stack/c2g/node"
 	"io"
 	"net/http"
-	"fmt"
-	"bytes"
 )
 
 type Endpoint struct {
@@ -41,7 +41,7 @@ func (self *Endpoint) Schema() (*meta.Module, error) {
 // Navigate to given node
 func navigate(target string, n node.Node) node.Node {
 	e := &node.MyNode{}
-	checkTarget := func(current string) (node.Node) {
+	checkTarget := func(current string) node.Node {
 		if target == current {
 			// Found target node, now get out of the picture
 			return n
@@ -65,7 +65,7 @@ func (self *Endpoint) handleRequest(target node.PathSlice) (node.Node, error) {
 		path = target.String()
 	}
 	operational, err := self.getRequest("restconf/" + path + "?content=nonconfig")
-	if err != nil && ! c2.IsNotFoundErr(err) {
+	if err != nil && !c2.IsNotFoundErr(err) {
 		return nil, err
 	}
 	tx, createTxErr := self.TxSource.ConfigStore(self)
@@ -73,7 +73,7 @@ func (self *Endpoint) handleRequest(target node.PathSlice) (node.Node, error) {
 		return nil, createTxErr
 	}
 	config, beginTxErr := tx.ConfigNode(path)
-	if beginTxErr != nil && ! c2.IsNotFoundErr(beginTxErr) {
+	if beginTxErr != nil && !c2.IsNotFoundErr(beginTxErr) {
 		return nil, beginTxErr
 	}
 	proxy := &proxy{
@@ -111,12 +111,12 @@ func (self *Endpoint) pushConfig() error {
 		return createTxErr
 	}
 	localConfig, beginTxErr := tx.ConfigNode("")
-	if beginTxErr != nil && ! c2.IsNotFoundErr(beginTxErr) {
+	if beginTxErr != nil && !c2.IsNotFoundErr(beginTxErr) {
 		return beginTxErr
 	}
 	var payload bytes.Buffer
 	payloadNode := node.NewJsonWriter(&payload).Node()
-	if err := node.NewBrowser2(self.Meta, localConfig).Root().InsertInto(payloadNode).LastErr; err != nil {
+	if err := node.NewBrowser(self.Meta, localConfig).Root().InsertInto(payloadNode).LastErr; err != nil {
 		return err
 	}
 	if _, err := self.request("PUT", "restconf/", &payload); err != nil {
@@ -135,10 +135,10 @@ func (self *Endpoint) pullConfig() error {
 		return createTxErr
 	}
 	localConfig, beginTxErr := tx.ConfigNode("")
-	if beginTxErr != nil && ! c2.IsNotFoundErr(beginTxErr) {
+	if beginTxErr != nil && !c2.IsNotFoundErr(beginTxErr) {
 		return beginTxErr
 	}
-	if err := node.NewBrowser2(self.Meta, localConfig).Root().UpsertFrom(remoteConfig).LastErr; err != nil {
+	if err := node.NewBrowser(self.Meta, localConfig).Root().UpsertFrom(remoteConfig).LastErr; err != nil {
 		return err
 	}
 	return tx.SaveConfig()
