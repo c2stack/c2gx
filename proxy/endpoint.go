@@ -3,12 +3,13 @@ package proxy
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"net/http"
+
 	"github.com/c2stack/c2g/browse"
 	"github.com/c2stack/c2g/c2"
 	"github.com/c2stack/c2g/meta"
 	"github.com/c2stack/c2g/node"
-	"io"
-	"net/http"
 )
 
 type Endpoint struct {
@@ -31,7 +32,7 @@ func (self *Endpoint) Schema() (*meta.Module, error) {
 		return nil, err
 	}
 	m := &meta.Module{}
-	if err = node.SelectModule(self.YangPath, m, false).Root().UpsertFrom(in).LastErr; err != nil {
+	if err = node.SelectModule(m, false).Root().UpsertFrom(in).LastErr; err != nil {
 		return nil, err
 	}
 	self.Meta = m
