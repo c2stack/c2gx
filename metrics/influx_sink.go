@@ -2,19 +2,19 @@ package metrics
 
 import (
 	"github.com/c2stack/c2g/c2"
-	"github.com/c2stack/c2g/conf"
+	"github.com/c2stack/c2g/device"
 	client "github.com/influxdata/influxdb/client/v2"
 )
 
 type InfluxSink struct {
-	Devices conf.ServiceLocator
+	Devices device.ServiceLocator
 	options InfluxOptions
 	conn    client.Client
 	queue   chan Metric
 	relays  map[string]*Relay
 }
 
-func NewInfluxSink(devices conf.ServiceLocator) *InfluxSink {
+func NewInfluxSink(devices device.ServiceLocator) *InfluxSink {
 	sink := &InfluxSink{
 		Devices: devices,
 		queue:   make(chan Metric),

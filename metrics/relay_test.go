@@ -1,17 +1,17 @@
 package metrics
 
 import "testing"
-import "github.com/c2stack/c2g/conf"
+import "github.com/c2stack/c2g/device"
 import "github.com/c2stack/c2g/examples/car"
 import "github.com/c2stack/c2g/meta"
 import "github.com/c2stack/c2g/c2"
 
 func Test_RelayNotify(t *testing.T) {
-	d := conf.NewDevice(&meta.FileStreamSource{Root: "../../c2g/examples/car"})
+	d := device.New(&meta.FileStreamSource{Root: "../../c2g/examples/car"})
 	c := car.New()
 	c.Speed = 1
 	d.Add("car", car.Node(c))
-	dm := conf.NewDeviceManager()
+	dm := device.NewMap()
 	dm.Add("dev0", d)
 
 	queue := make(chan Metric)

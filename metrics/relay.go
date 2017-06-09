@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/c2stack/c2g/c2"
-	"github.com/c2stack/c2g/conf"
+	"github.com/c2stack/c2g/device"
 	"github.com/c2stack/c2g/node"
 	"github.com/mattn/anko/vm"
 )
@@ -13,7 +13,7 @@ type Relay struct {
 	Name     string
 	Database string
 	Script   string
-	devices  conf.ServiceLocator
+	devices  device.ServiceLocator
 	src      NotifySource
 	tags     map[string]string
 	closer   node.NotifyCloser
