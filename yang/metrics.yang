@@ -1,0 +1,87 @@
+module metrics {
+    prefix "";
+    namespace "";
+    revision 0;
+
+    leaf addr {
+        description "http address of influx db service";
+        type string;
+    }
+
+    grouping metric {
+
+        leaf time {            
+            type int64;
+        }
+
+        leaf name {
+            type string;
+        }
+
+        leaf database {
+            type string;
+        }
+        
+        list tag {
+            key "name";
+            leaf name {
+                type string;
+            }
+            leaf value {
+                type string;
+            }
+        }
+
+        list field {
+            key "name";
+            leaf name {
+                type string;
+            }
+            anyxml value;
+        }
+    }
+
+    list relay {
+        key "name";
+
+        leaf name {
+            type string;
+        }
+
+        leaf database {
+            type string;
+        }
+        
+        list tag {
+            key "name";
+            leaf name {
+                type string;
+            }
+            leaf value {
+                type string;
+            }
+        }
+
+        leaf script {
+            type string;
+        }
+
+        container source {
+            leaf device {
+                type string;
+            }
+
+            leaf module {
+                type string;
+            }
+
+            leaf path {
+                type string;
+            }
+        }
+
+        notification update {
+            uses metric;
+        }
+    }
+}
