@@ -10,7 +10,7 @@ func Test_RelayNotify(t *testing.T) {
 	d := device.New(&meta.FileStreamSource{Root: "../../c2g/examples/car"})
 	c := car.New()
 	c.Speed = 1
-	d.Add("car", car.Node(c))
+	d.Add("car", car.Manage(c))
 	dm := device.NewMap()
 	dm.Add("dev0", d)
 

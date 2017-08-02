@@ -2,12 +2,14 @@ package metrics
 
 import (
 	"github.com/c2stack/c2g/node"
+	"github.com/c2stack/c2g/nodes"
+	"github.com/c2stack/c2g/val"
 )
 
 func InfluxNode(influx *InfluxSink) node.Node {
 	o := influx.Options()
-	return &node.Extend{
-		Node: node.ReflectNode(&o),
+	return &nodes.Extend{
+		Node: nodes.ReflectNode(&o),
 		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "relay":
@@ -25,19 +27,19 @@ func InfluxNode(influx *InfluxSink) node.Node {
 }
 
 func relayListNode(mgr Manager, relayIndex *node.Index) node.Node {
-	return &node.MyNode{
-		OnNext: func(r node.ListRequest) (node.Node, []*node.Value, error) {
+	return &nodes.Basic{
+		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
 			var relay *Relay
 			key := r.Key
 			if r.New {
-				name := r.Key[0].Str
+				name := r.Key[0].String()
 				relay := &Relay{
 					Name: name,
 				}
 				mgr.AddRelay(relay)
 			}
 			if key != nil {
-				name := r.Key[0].Str
+				name := r.Key[0].String()
 				relay = mgr.GetRelay(name)
 				if relay != nil && r.Delete {
 					relay.Close()
@@ -47,7 +49,10 @@ func relayListNode(mgr Manager, relayIndex *node.Index) node.Node {
 				if v := relayIndex.NextKey(r.Row); v != node.NO_VALUE {
 					name := v.String()
 					if relay = mgr.GetRelay(name); relay != nil {
-						key = node.SetValues(r.Meta.KeyMeta(), name)
+						var err error
+						if key, err = node.NewValues(r.Meta.KeyMeta(), name); err != nil {
+							return nil, nil, err
+						}
 					}
 				}
 			}
@@ -60,8 +65,8 @@ func relayListNode(mgr Manager, relayIndex *node.Index) node.Node {
 }
 
 func relayNode(relay *Relay) node.Node {
-	return &node.Extend{
-		Node: node.ReflectNode(relay),
+	return &nodes.Extend{
+		Node: nodes.ReflectNode(relay),
 		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "source":
@@ -92,16 +97,16 @@ func relayNode(relay *Relay) node.Node {
 
 func tagListNode(tags map[string]string) node.Node {
 	index := node.NewIndex(tags)
-	return &node.MyNode{
-		OnNext: func(r node.ListRequest) (node.Node, []*node.Value, error) {
+	return &nodes.Basic{
+		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
 			var tag string
 			var value string
 			key := r.Key
 			if r.New {
-				tag = r.Key[0].Str
+				tag = r.Key[0].String()
 			}
 			if key != nil {
-				tag = key[0].Str
+				tag = key[0].String()
 				if r.Delete {
 					delete(tags, tag)
 				}
@@ -110,7 +115,10 @@ func tagListNode(tags map[string]string) node.Node {
 				if v := index.NextKey(r.Row); v != node.NO_VALUE {
 					tag = v.String()
 					if value = tags[tag]; value != "" {
-						key = node.SetValues(r.Meta.KeyMeta(), value)
+						var err error
+						if key, err = node.NewValues(r.Meta.KeyMeta(), value); err != nil {
+							return nil, nil, err
+						}
 					}
 				}
 			}
@@ -123,22 +131,22 @@ func tagListNode(tags map[string]string) node.Node {
 }
 
 func tagNode(tag string, tags map[string]string) node.Node {
-	return &node.MyNode{
+	return &nodes.Basic{
 		OnField: func(r node.FieldRequest, hnd *node.ValueHandle) error {
 			switch r.Meta.GetIdent() {
 			case "name":
 				if r.Write {
 					v := tags[tag]
 					delete(tags, tag)
-					tags[hnd.Val.Str] = v
+					tags[hnd.Val.String()] = v
 				} else {
-					hnd.Val = &node.Value{Str: tag}
+					hnd.Val = val.String(tag)
 				}
 			case "value":
 				if r.Write {
-					tags[tag] = hnd.Val.Str
+					tags[tag] = hnd.Val.String()
 				} else {
-					hnd.Val = &node.Value{Str: tags[tag]}
+					hnd.Val = val.String(tags[tag])
 				}
 			}
 			return nil
@@ -148,16 +156,16 @@ func tagNode(tag string, tags map[string]string) node.Node {
 
 func fieldListNode(fields map[string]interface{}) node.Node {
 	index := node.NewIndex(fields)
-	return &node.MyNode{
-		OnNext: func(r node.ListRequest) (node.Node, []*node.Value, error) {
+	return &nodes.Basic{
+		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
 			var field string
 			var value interface{}
 			key := r.Key
 			if r.New {
-				field = r.Key[0].Str
+				field = r.Key[0].String()
 			}
 			if key != nil {
-				field = key[0].Str
+				field = key[0].String()
 				if r.Delete {
 					delete(fields, field)
 				}
@@ -166,7 +174,10 @@ func fieldListNode(fields map[string]interface{}) node.Node {
 				if v := index.NextKey(r.Row); v != node.NO_VALUE {
 					field = v.String()
 					if value = fields[field]; value != "" {
-						key = node.SetValues(r.Meta.KeyMeta(), value)
+						var err error
+						if key, err = node.NewValues(r.Meta.KeyMeta(), value); err != nil {
+							return nil, nil, err
+						}
 					}
 				}
 			}
@@ -179,22 +190,22 @@ func fieldListNode(fields map[string]interface{}) node.Node {
 }
 
 func fieldNode(field string, fields map[string]interface{}) node.Node {
-	return &node.MyNode{
+	return &nodes.Basic{
 		OnField: func(r node.FieldRequest, hnd *node.ValueHandle) error {
 			switch r.Meta.GetIdent() {
 			case "name":
 				if r.Write {
 					v := fields[field]
 					delete(fields, field)
-					fields[hnd.Val.Str] = v
+					fields[hnd.Val.String()] = v
 				} else {
-					hnd.Val = &node.Value{Str: field}
+					hnd.Val = val.String(field)
 				}
 			case "value":
 				if r.Write {
-					fields[field] = hnd.Val.AnyData
+					fields[field] = hnd.Val.Value()
 				} else {
-					hnd.Val = &node.Value{AnyData: fields[field]}
+					hnd.Val = val.Any{Thing: fields[field]}
 				}
 			}
 			return nil
@@ -204,8 +215,8 @@ func fieldNode(field string, fields map[string]interface{}) node.Node {
 
 func relaySourceNode(relay *Relay) node.Node {
 	src := relay.Source()
-	return &node.Extend{
-		Node: node.ReflectNode(&src),
+	return &nodes.Extend{
+		Node: nodes.ReflectNode(&src),
 		OnEndEdit: func(p node.Node, r node.NodeRequest) error {
 			if err := p.EndEdit(r); err != nil {
 				return err
