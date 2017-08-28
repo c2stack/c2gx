@@ -30,8 +30,6 @@ func Test_RelayNotify(t *testing.T) {
 	}
 	c.Start()
 	m := <-queue
-	if err := c2.CheckEqual("1", m.Tags["i"]); err != nil {
-		t.Error(err)
-	}
+	c2.AssertEqual(t, "1", m.Tags["i"])
 	t.Log("got one")
 }
