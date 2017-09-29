@@ -9,7 +9,7 @@ import (
 func InfluxNode(influx *InfluxSink) node.Node {
 	o := influx.Options()
 	return &nodes.Extend{
-		Base: nodes.Reflect(&o),
+		Base: nodes.ReflectChild(&o),
 		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "relay":
@@ -66,7 +66,7 @@ func relayListNode(mgr Manager, relayIndex *node.Index) node.Node {
 
 func relayNode(relay *Relay) node.Node {
 	return &nodes.Extend{
-		Base: nodes.Reflect(relay),
+		Base: nodes.ReflectChild(relay),
 		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.GetIdent() {
 			case "source":
@@ -216,7 +216,7 @@ func fieldNode(field string, fields map[string]interface{}) node.Node {
 func relaySourceNode(relay *Relay) node.Node {
 	src := relay.Source()
 	return &nodes.Extend{
-		Base: nodes.Reflect(&src),
+		Base: nodes.ReflectChild(&src),
 		OnEndEdit: func(p node.Node, r node.NodeRequest) error {
 			if err := p.EndEdit(r); err != nil {
 				return err

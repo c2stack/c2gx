@@ -1,0 +1,90 @@
+digraph G {
+        fontname = "Bitstream Vera Sans"
+        fontsize = 8
+
+        node [
+                fontname = "Bitstream Vera Sans"
+                fontsize = 8
+                shape = "record"
+        ]
+
+        edge [
+                fontname = "Bitstream Vera Sans"
+                fontsize = 8
+        ]
+
+
+       metrics [
+         label = "{|addr : string\l}"
+       ]
+
+
+
+
+
+
+
+       metrics_relay [
+         label = "{relay[…]|name : string\ldatabase : string\lscript : string\l}"
+       ]
+
+
+
+
+
+       metrics_relay_update [
+         label = "{update (notification)|time : int64\lname : string\ldatabase : string\ltag[…] : \lfield[…] : \l}"
+         color = "#4fb32e"
+       ]
+       metrics_relay -> metrics_relay_update [
+         style = "dashed"
+         color = "#4fb32e"
+       ]
+
+
+
+       metrics_relay_tag [
+         label = "{tag[…]|name : string\lvalue : string\l}"
+       ]
+
+
+
+
+
+
+
+       metrics_relay_source [
+         label = "{source|device : string\lmodule : string\lpath : string\l}"
+       ]
+
+
+
+
+
+
+
+
+
+
+  
+    
+    metrics -> metrics_relay
+
+  
+    
+    
+    metrics_relay -> metrics_relay_tag
+    
+    metrics_relay -> metrics_relay_source
+
+  
+    
+    
+
+  
+    
+    
+    
+
+
+}

@@ -1,0 +1,3 @@
+[submodule "host/vendor/github.com/cloudfoundry/gosigar"]
+	path = host/vendor/github.com/cloudfoundry/gosigar
+	url = https://github.com/cloudfoundry/gosigar

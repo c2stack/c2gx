@@ -1,0 +1,206 @@
+module host {
+    description "OS metrics for this host";
+
+    container swap {
+        config "false";
+        leaf total {
+            type uint64;
+        }
+        leaf used {
+            type uint64;
+        }
+        leaf free {
+            type uint64;
+        }
+    }
+
+    container ram {
+        config "false";
+        description "OS memory details";
+
+        leaf total {
+            type uint64;
+        }
+        leaf used {
+            type uint64;
+        }
+        leaf free {
+            type uint64;
+        }
+        leaf actualFree {
+            type uint64;
+        }
+        leaf actualUsed {
+            type uint64;
+        }
+    }
+
+    list fs {
+        config "false";
+        description "file system details";
+
+        key "dirName";
+        config "false";
+
+        leaf dirName {
+            type string;
+        }
+
+        leaf devName {
+            type string;
+        }
+
+        leaf typeName {
+            type string;
+        }
+
+        leaf sysTypeName {
+            type string;
+        }
+
+        leaf options {
+            type string;
+        }
+
+        leaf flags {
+            /* to do - expand into leaf-list/enumeration */
+            type int32;
+        }
+
+        container usage {
+            description "file system usage";
+
+            leaf total {
+                type uint64;
+            }
+            leaf used {
+                type uint64;
+            }
+            leaf free {
+                type uint64;
+            }
+            leaf avail {
+                type uint64;
+            }
+            leaf files {
+                type uint64;
+            }
+            leaf freeFiles {
+                type uint64;
+            }
+        }
+    }
+
+    list cpu {
+        description "current workload for each CPU";
+        config "false";
+
+        key "id";
+        config "false";
+        leaf id {
+            type int32;
+        }
+        leaf user {
+            type uint64;
+        }
+        leaf nice {
+            type uint64;
+        }
+        leaf sys {
+            type uint64;
+        }
+        leaf idle {
+            type uint64;
+        }
+        leaf wait {
+            type uint64;
+        }
+        leaf irq {
+            type uint64;
+        }
+        leaf softIrq {
+            type uint64;
+        }
+        leaf stolen {
+            type uint64;
+        }
+    }
+
+    /*
+      Sigar process functions return 'cannot allocate memory' error
+      after a few calls.  will need to circle back and address this if process
+      info is desired.
+    */  
+    list proc {
+        config "false";
+        key "pid";
+        leaf pid {
+            type int32;
+        }
+        container state {
+            leaf name {
+                type string;
+            }
+            leaf state {
+                type enumeration {
+                    enum sleep;
+                    enum run;
+                    enum stop;
+                    enum zombie;
+                    enum idle;
+                    enum unknown;
+                }
+            }
+            leaf ppid {
+                description "Parent PID";
+                type int32;
+            }
+            leaf tty {
+                type int32;
+            }
+            leaf priority {
+                type int32;
+            }
+            leaf nice {
+                type int32;
+            }
+            leaf processor {
+                type int32;
+            }
+        }
+        container mem {
+            leaf size {
+                type uint64;
+            }
+            leaf resident {
+                type uint64;
+            }
+            leaf share {
+                type uint64;
+            }
+            leaf minorFaults {
+                type uint64;
+            }
+            leaf majorFaults {
+                type uint64;
+            }
+            leaf pageFaults {
+                type uint64;
+            }
+        }
+        container time {
+            leaf startTime {
+                type uint64;
+            }
+            leaf user {
+                type uint64;
+            }
+            leaf sys {
+                type uint64;
+            }
+            leaf total {
+                type uint64;
+            }
+        }
+    }
+}

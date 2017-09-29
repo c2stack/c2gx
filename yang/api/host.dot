@@ -1,0 +1,197 @@
+digraph G {
+        fontname = "Bitstream Vera Sans"
+        fontsize = 8
+
+        node [
+                fontname = "Bitstream Vera Sans"
+                fontsize = 8
+                shape = "record"
+        ]
+
+        edge [
+                fontname = "Bitstream Vera Sans"
+                fontsize = 8
+        ]
+
+
+       host [
+         label = "{|}"
+       ]
+
+
+
+
+
+
+
+       host_swap [
+         label = "{swap|total : uint64\lused : uint64\lfree : uint64\l}"
+       ]
+
+
+
+
+
+
+
+       host_ram [
+         label = "{ram|total : uint64\lused : uint64\lfree : uint64\lactualFree : uint64\lactualUsed : uint64\l}"
+       ]
+
+
+
+
+
+
+
+       host_fs [
+         label = "{fs[…]|dirName : string\ldevName : string\ltypeName : string\lsysTypeName : string\loptions : string\lflags : int32\l}"
+       ]
+
+
+
+
+
+
+
+       host_fs_usage [
+         label = "{usage|total : uint64\lused : uint64\lfree : uint64\lavail : uint64\lfiles : uint64\lfreeFiles : uint64\l}"
+       ]
+
+
+
+
+
+
+
+       host_cpu [
+         label = "{cpu[…]|id : int32\luser : uint64\lnice : uint64\lsys : uint64\lidle : uint64\lwait : uint64\lirq : uint64\lsoftIrq : uint64\lstolen : uint64\l}"
+       ]
+
+
+
+
+
+
+
+       host_proc [
+         label = "{proc[…]|pid : int32\l}"
+       ]
+
+
+
+
+
+
+
+       host_proc_state [
+         label = "{state|name : string\lstate : enumeration\lppid : int32\ltty : int32\lpriority : int32\lnice : int32\lprocessor : int32\l}"
+       ]
+
+
+
+
+
+
+
+       host_proc_mem [
+         label = "{mem|size : uint64\lresident : uint64\lshare : uint64\lminorFaults : uint64\lmajorFaults : uint64\lpageFaults : uint64\l}"
+       ]
+
+
+
+
+
+
+
+       host_proc_time [
+         label = "{time|startTime : uint64\luser : uint64\lsys : uint64\ltotal : uint64\l}"
+       ]
+
+
+
+
+
+
+
+
+
+
+  
+    host -> host_swap
+    host -> host_ram
+    host -> host_fs
+    host -> host_cpu
+    host -> host_proc
+
+  
+    
+    
+    
+
+  
+    
+    
+    
+    
+    
+
+  
+    
+    
+    
+    
+    
+    
+    host_fs -> host_fs_usage
+
+  
+    
+    
+    
+    
+    
+    
+
+  
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+  
+    
+    host_proc -> host_proc_state
+    host_proc -> host_proc_mem
+    host_proc -> host_proc_time
+
+  
+    
+    
+    
+    
+    
+    
+    
+
+  
+    
+    
+    
+    
+    
+    
+
+  
+    
+    
+    
+    
+
+
+}
