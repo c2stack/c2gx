@@ -7,7 +7,7 @@ import "github.com/c2stack/c2g/meta"
 import "github.com/c2stack/c2g/c2"
 
 func Test_RelayNotify(t *testing.T) {
-	d := device.New(&meta.FileStreamSource{Root: "../../examples/car"})
+	d := device.New(&meta.FileStreamSource{Root: "../vendor/github.com/c2stack/examples/car"})
 	c := car.New()
 	c.Speed = 1
 	d.Add("car", car.Manage(c))
