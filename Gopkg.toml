@@ -27,10 +27,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/c2stack/examples"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/cloudfoundry/gosigar"
 
 [[constraint]]

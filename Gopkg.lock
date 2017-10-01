@@ -9,12 +9,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/c2stack/examples"
-  packages = ["car"]
-  revision = "651b2b2ee398da6cfaa3f6414b6534b9ab597d66"
-
-[[projects]]
-  branch = "master"
   name = "github.com/cloudfoundry/gosigar"
   packages = ["."]
   revision = "f4030c18ce1a78252deadef2f5e460b35cce7ae5"
@@ -34,6 +28,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "527cd98c10c930f433577afbd0be95bbee4dfba2fdec7b79b8f3b83a16ed0753"
+  inputs-digest = "2ad92e09e1dfc07887cdf40126a03e433bcbf2265eb7f6dce61f362d337ae42f"
   solver-name = "gps-cdcl"
   solver-version = 1
