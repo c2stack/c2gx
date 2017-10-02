@@ -25,9 +25,21 @@
   packages = ["ast","parser","vm"]
   revision = "a3969c63681391ec413427cae813d6d59d6031f1"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["curve25519","ed25519","ed25519/internal/edwards25519","ssh","ssh/terminal"]
+  revision = "9419663f5a44be8b34ca85f08abc5fe1be11f8a3"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix","windows"]
+  revision = "314a259e304ff91bd6985da2a7149bbf91237993"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2ad92e09e1dfc07887cdf40126a03e433bcbf2265eb7f6dce61f362d337ae42f"
+  inputs-digest = "6dc3571cd81a29d096c8e57b725449bd1747e6caed745389c54f67ef3ca27cea"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -1,0 +1,20 @@
+module console {
+    prefix "";
+    namespace "";
+    revision 0;
+
+    leaf address {
+        description "bind IP and port to use for server. e.g. 0.0.0.0:2202";
+        type string;
+    }
+
+    leaf-list hostKeyFiles {
+        description "PEM encoded private keys to use for server";
+        type string;
+    }
+
+    leaf authorizedKeysFile {
+        description "plain test file listing public key of each allowed client. Same format as ~/.ssh/authorized_keys";
+        type string;
+    }
+}
